@@ -1,0 +1,50 @@
+{
+  "items": [
+    {
+      "id": "give-a-role",
+      "label": "Mark a member as staff without granting extra access",
+      "steps": [
+        {
+          "enterAs": "visitor"
+        },
+        {
+          "goto": "/account"
+        },
+        {
+          "fill": "Email",
+          "value": "staff-member@example.test"
+        },
+        {
+          "fill": "Password",
+          "value": "a long staff password 123"
+        },
+        {
+          "click": "Create account"
+        },
+        {
+          "expectHeading": "Your bookings"
+        },
+        {
+          "enterAs": "owner"
+        },
+        {
+          "goto": "/owner/roles"
+        },
+        {
+          "expectHeading": "Roles"
+        },
+        {
+          "select": "Role for staff-member@example.test",
+          "option": "Staff"
+        },
+        {
+          "expectText": "staff-member@example.test is now Staff."
+        },
+        {
+          "expectText": "Staff see nothing extra yet."
+        }
+      ]
+    }
+  ],
+  "names": {}
+}

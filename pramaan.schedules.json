@@ -1,0 +1,5 @@
+{
+  "schedules": [
+    { "name": "booking-reminders", "cron": "*/15 * * * *", "path": "/api/jobs/reminders" }
+  ]
+}

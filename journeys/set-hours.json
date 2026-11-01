@@ -1,0 +1,30 @@
+{
+  "items": [
+    {
+      "id": "owner-sets-hours",
+      "label": "The owner opens on Saturdays and saves the week",
+      "steps": [
+        { "enterAs": "owner" },
+        { "goto": "/owner/hours" },
+        { "expectHeading": "Hours and days off" },
+        { "check": "Saturday" },
+        { "click": "Save hours" },
+        { "expectText": "Hours saved." }
+      ]
+    },
+    {
+      "id": "owner-adds-a-day-off",
+      "label": "The owner adds a day off, which nobody can book",
+      "steps": [
+        { "enterAs": "owner" },
+        { "goto": "/owner/hours" },
+        { "fill": "Date", "value": "2030-12-24" },
+        { "fill": "Note", "value": "Closed for the holidays" },
+        { "click": "Add day off" },
+        { "expectText": "Day off added. Nobody can book it." },
+        { "expectText": "Closed for the holidays" }
+      ]
+    }
+  ],
+  "names": {}
+}

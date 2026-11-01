@@ -1,0 +1,42 @@
+{
+  "items": [
+    {
+      "id": "customer-signs-up",
+      "label": "A customer makes an account and sees their bookings, none yet",
+      "purpose": "sign-up",
+      "steps": [
+        { "goto": "/account" },
+        { "expectHeading": "Create your account" },
+        { "fill": "Email", "value": "sam@example.com" },
+        { "fill": "Password", "value": "a long password 1234" },
+        { "click": "Create account" },
+        { "expectHeading": "Your bookings" },
+        { "expectText": "No bookings saved yet" }
+      ]
+    },
+    {
+      "id": "customer-sees-their-booking",
+      "label": "A signed-in customer books, and the booking is in their account",
+      "steps": [
+        { "goto": "/account" },
+        { "fill": "Email", "value": "kim@example.com" },
+        { "fill": "Password", "value": "another long password 99" },
+        { "click": "Create account" },
+        { "expectHeading": "Your bookings" },
+        { "click": "Book a time" },
+        { "click": "Standard appointment" },
+        { "click": "Next available time" },
+        { "fill": "Your name", "value": "Kim Lee" },
+        { "fill": "Email", "value": "kim@example.com" },
+        { "fill": "Phone", "value": "+1 415 555 0100" },
+        { "click": "Confirm booking" },
+        { "expectHeading": "You're booked" },
+        { "goto": "/account" },
+        { "expectHeading": "Your bookings" },
+        { "expectText": "Coming up" },
+        { "expectText": "Standard appointment" }
+      ]
+    }
+  ],
+  "names": {}
+}

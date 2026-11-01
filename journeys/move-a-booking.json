@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "id": "move-a-booking",
+      "label": "A visitor moves their booking to another free time from its link",
+      "steps": [
+        { "goto": "/" },
+        { "click": "First consultation" },
+        { "click": "Next available time" },
+        { "fill": "Your name", "value": "Mary Somerville" },
+        { "fill": "Email", "value": "mary@example.com" },
+        { "fill": "Phone", "value": "+44 131 496 0000" },
+        { "click": "Confirm booking" },
+        { "expectHeading": "You're booked" },
+        { "click": "Move to another time" },
+        { "expectHeading": "Pick a new time" },
+        { "click": "Next available time" },
+        { "click": "Move my booking" },
+        { "expectHeading": "Booking moved" },
+        { "expectText": "First consultation" }
+      ]
+    }
+  ],
+  "names": {}
+}

@@ -1,0 +1,275 @@
+{
+  "id": "bookings",
+  "version": "0.2.0",
+  "title": "Bookings",
+  "summary": "Appointments and class places for salons and studios. Visitors book, move or cancel; the owner manages services, staff, hours and capacity.",
+  "category": "scheduling",
+  "stack": {
+    "contract": "1",
+    "template": "data",
+    "next": "16.3.6",
+    "react": "19.3.0",
+    "node": "24.18.0",
+    "packageManager": "pnpm@11.15.1"
+  },
+  "licence": "MIT",
+  "provenance": {
+    "mode": "derived",
+    "starter": "Pramaan-Dev/product-loop@fbc5505d5dffed1e5410359ff65d59d21c872d21",
+    "derivedFrom": ["Pramaan-Dev/product-loop@fbc5505d5dffed1e5410359ff65d59d21c872d21"],
+    "upstreamNotices": ["NOTICE.md"],
+    "writtenBy": "person"
+  },
+  "measured": {
+    "on": "2026-11-01",
+    "by": "person",
+    "draft": {
+      "peakMiB": 1216,
+      "limitMiB": 2048,
+      "firstAnswerSeconds": 9
+    },
+    "verifier": {
+      "peakMiB": 1602,
+      "limitMiB": 2048,
+      "seconds": 49
+    },
+    "browser": {
+      "peakMiB": 153,
+      "limitMiB": 1024
+    }
+  },
+  "entryPoints": [
+    {
+      "route": "/",
+      "file": "app/page.tsx",
+      "audience": "visitor",
+      "summary": "The booking page: a service, who, a free time in the visitor's own zone, then their details."
+    },
+    {
+      "route": "/manage",
+      "file": "app/manage/page.tsx",
+      "audience": "visitor",
+      "summary": "The confirmation, and the page a booking's signed link opens: add to calendar, move or cancel."
+    },
+    {
+      "route": "/account",
+      "file": "app/account/page.tsx",
+      "audience": "member",
+      "summary": "A customer's account: sign up or in, and see their bookings."
+    },
+    {
+      "route": "/owner",
+      "file": "app/owner/page.tsx",
+      "audience": "owner",
+      "summary": "The owner's day, opened with Pramaan's owner pass: today, the next week and what is left to set up."
+    },
+    {
+      "route": "/owner/bookings",
+      "file": "app/owner/bookings/screen.tsx",
+      "audience": "owner",
+      "summary": "Every booking, as a ruled week calendar or a list; cancel or move one."
+    },
+    {
+      "route": "/owner/services",
+      "file": "app/owner/services/screen.tsx",
+      "audience": "owner",
+      "summary": "Services: name, length, price shown and free time before and after."
+    },
+    {
+      "route": "/owner/staff",
+      "file": "app/owner/staff/screen.tsx",
+      "audience": "owner",
+      "summary": "Who people book with, their colour and the services they offer."
+    },
+    {
+      "route": "/owner/hours",
+      "file": "app/owner/hours/screen.tsx",
+      "audience": "owner",
+      "summary": "Each person's weekly hours, and days off for one person or the whole business."
+    },
+    {
+      "route": "/owner/settings",
+      "file": "app/owner/settings/screen.tsx",
+      "audience": "owner",
+      "summary": "Business details, time zone, booking rules, reminders and the owner's own sign-in."
+    },
+    {
+      "route": "/classes",
+      "file": "app/classes/page.tsx",
+      "audience": "visitor",
+      "summary": "Upcoming classes: book or give up a place (an account is needed)."
+    },
+    {
+      "route": "/owner/classes",
+      "file": "app/owner/classes/screen.tsx",
+      "audience": "owner",
+      "summary": "Add a class with its time and number of places."
+    },
+    {
+      "route": "/owner/roles",
+      "file": "app/owner/roles/screen.tsx",
+      "audience": "owner",
+      "summary": "Mark a member as staff; staff see nothing extra yet."
+    },
+    {
+      "route": "/owner/email",
+      "file": "app/owner/email/screen.tsx",
+      "audience": "owner",
+      "summary": "See whether email is on and the outcome of recent notices."
+    },
+    {
+      "route": "/records",
+      "file": "app/records/page.tsx",
+      "audience": "owner",
+      "summary": "Search, add, edit and export preparation notes for the business."
+    }
+  ],
+  "roles": {
+    "owner": {
+      "source": "owner-pass",
+      "summary": "The business: sets services, staff, hours and days off, and sees and changes every booking."
+    },
+    "member": {
+      "source": "public-sign-up",
+      "summary": "A customer with an account: sees the bookings they made while signed in, or saved from a link."
+    },
+    "visitor": {
+      "source": "anonymous",
+      "summary": "Books with no account, and moves or cancels with the signed link on their confirmation."
+    },
+    "staff": {
+      "source": "added-by-owner",
+      "summary": "A member marked as staff by the owner; staff see nothing extra yet."
+    }
+  },
+  "journeys": [
+    {
+      "id": "book-a-slot",
+      "role": "visitor",
+      "summary": "Picks a service and a free time shown in their own zone, books it, and sees the confirmation; the time is gone for everyone else.",
+      "status": "ships-working",
+      "checklist": "journeys/book-a-slot.json"
+    },
+    {
+      "id": "cancel-a-booking",
+      "role": "visitor",
+      "summary": "Cancels from the confirmation page with no account, and the time is free again.",
+      "status": "ships-working",
+      "checklist": "journeys/cancel-a-booking.json"
+    },
+    {
+      "id": "move-a-booking",
+      "role": "visitor",
+      "summary": "Moves the booking to another free time from its link; the old time is freed.",
+      "status": "ships-working",
+      "checklist": "journeys/move-a-booking.json"
+    },
+    {
+      "id": "customer-account",
+      "role": "member",
+      "summary": "Signs up, books while signed in, and finds the booking under My bookings.",
+      "status": "ships-working",
+      "checklist": "journeys/customer-account.json"
+    },
+    {
+      "id": "set-up-services",
+      "role": "owner",
+      "summary": "Adds a service with its length, price and buffers, and the booking page offers it.",
+      "status": "ships-working",
+      "checklist": "journeys/set-up-services.json"
+    },
+    {
+      "id": "set-hours",
+      "role": "owner",
+      "summary": "Sets weekly hours and a day off; the booking page offers only those times.",
+      "status": "ships-working",
+      "checklist": "journeys/set-hours.json"
+    },
+    {
+      "id": "run-the-diary",
+      "role": "owner",
+      "summary": "Names the business, and sees today and the week's bookings as a calendar or a list.",
+      "status": "ships-working",
+      "checklist": "journeys/run-the-diary.json"
+    },
+    {
+      "id": "confirmation-email",
+      "role": "visitor",
+      "summary": "Gets an email confirming the booking, moving it or cancelling it, with the link to change it.",
+      "status": "needs-capability",
+      "capability": "email"
+    },
+    {
+      "id": "owner-notices",
+      "role": "owner",
+      "summary": "Gets an email for each new, moved or cancelled booking.",
+      "status": "needs-capability",
+      "capability": "email"
+    },
+    {
+      "id": "reminder-email",
+      "role": "visitor",
+      "summary": "Gets a reminder email the day before (the hours are a setting), from the live app's scheduled job.",
+      "status": "needs-capability",
+      "capability": "scheduled_jobs"
+    },
+    {
+      "id": "deposit-payment",
+      "role": "visitor",
+      "summary": "Pays a deposit when booking, through a payment provider.",
+      "status": "needs-capability",
+      "capability": "external_http"
+    },
+    {
+      "id": "give-a-role",
+      "role": "owner",
+      "summary": "Marks a member as staff (staff see nothing extra yet).",
+      "status": "ships-working",
+      "checklist": "journeys/give-a-role.json"
+    },
+    {
+      "id": "manage-records",
+      "role": "owner",
+      "summary": "Searches, adds, edits and exports preparation notes.",
+      "status": "ships-working",
+      "checklist": "journeys/manage-records.json"
+    },
+    {
+      "id": "see-email-status",
+      "role": "owner",
+      "summary": "Sees plainly when email is off.",
+      "status": "ships-working",
+      "checklist": "journeys/see-email-status.json"
+    },
+    {
+      "id": "class-places",
+      "role": "owner",
+      "summary": "Creates a class; members book and cancel their own places without exceeding capacity.",
+      "status": "ships-working",
+      "checklist": "journeys/class-places.json"
+    }
+  ],
+  "capabilities": ["accounts", "server_data", "roles", "email", "scheduled_jobs", "external_http"],
+  "notIncluded": [
+    "Payments and deposits: prices are shown, nothing is charged (needs the app's egress door and a payment provider)",
+    "Password reset, and password change for customers (needs the app email module)",
+    "Email verification: no customer's email address is checked",
+    "Calendar sync with Google, Outlook or Apple (a booking can be added to one with its calendar file)",
+    "Video meeting links, and text-message reminders",
+    "Bookings that wait for approval: every booking is confirmed straight away",
+    "Waiting lists, no-show tracking and limits on bookings per customer",
+    "Email and scheduled jobs are off by default: until they're on, nothing is emailed and no reminders run, and the app says so",
+    "Going live with data needs the platform's live database, which is off by default",
+    "Other languages: the app is in English",
+    "Classes have a separate timetable from staff appointments; no recurring classes or group checkout.",
+    "Platform organisation accounts and team details are not included.",
+    "Staff is a label only; staff see nothing extra yet.",
+    "Classes cannot be edited or cancelled after they are added, and the owner cannot see who booked."
+  ],
+  "protectedPaths": [
+    "lib/accounts.ts",
+    "src/lib/pramaan-modules.ts",
+    "lib/bookings/holds.ts",
+    "lib/bookings/reserve.ts"
+  ]
+}

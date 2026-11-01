@@ -1,0 +1,4 @@
+{
+  "routes": ["/account"],
+  "nav": [{ "label": "Book", "href": "/" }, { "label": "My bookings", "href": "/account" }]
+}

@@ -1,0 +1,154 @@
+{
+  "kit": "bookings",
+  "version": "0.2.0",
+  "digest": "sha256:3d3a638b9b8994dc1e1011650b20819721e74d18f1ec8e8404f8828a27f2d826",
+  "contract": "1",
+  "green": false,
+  "ranAt": "2026-11-01T19:20:41.903Z",
+  "run": null,
+  "gates": [
+    {
+      "id": "contract",
+      "ok": true,
+      "evidence": "179 files, 9 migrations, 16 journeys"
+    },
+    {
+      "id": "licence",
+      "ok": true,
+      "evidence": "MIT; derived, written by person"
+    },
+    {
+      "id": "secrets",
+      "ok": true,
+      "evidence": "Scanned 180 source files for credential-shaped material."
+    },
+    {
+      "id": "packages",
+      "ok": true,
+      "evidence": "3 packages beyond the starter's, every one under an allowed licence"
+    },
+    {
+      "id": "install",
+      "ok": false,
+      "evidence": "Frozen scripts-disabled install passed locally, but full CI admission refused CHAT_INSTALL_NETWORK_UNVERIFIED: this host has no verified install-egress firewall receipt."
+    },
+    {
+      "id": "draft",
+      "ok": true,
+      "evidence": "/ first answered in 8 s; after every entry point, draft: peak 1215 MiB (page cache included), working set up to 1101 MiB, anon up to 976 MiB, tmpfs (shmem) up to 74 MiB, of 2048 MiB"
+    },
+    {
+      "id": "check",
+      "ok": true,
+      "evidence": "Production build, typecheck, lint passed in execution image"
+    },
+    {
+      "id": "tests",
+      "ok": true,
+      "evidence": "passed in the cell in 14 s (150 passed, 0 skipped, 0 todo, 0 failed of 150); pramaan-agent-run-87ced4fcedb9: peak unread (page cache included), working set up to 312 MiB, anon up to unread, tmpfs (shmem) up to unread (docker stats); pramaan-agent-run-87ced4fcedb9-db: peak unread (page cache included"
+    },
+    {
+      "id": "migrations",
+      "ok": true,
+      "evidence": "9 migrations applied in one transaction on Postgres 16.15"
+    },
+    {
+      "id": "owner-pass",
+      "ok": true,
+      "evidence": "18 account checks passed: signed-out, owner-pass, owner-pass-once, sign-up, server-role, not-owner, session, forged-session, cross-site, save, read, isolated, sign-out, sign-in, kept, host-cookie, client-throttle, no-lockout."
+    },
+    {
+      "id": "journey:book-a-slot",
+      "ok": true,
+      "evidence": "3 items passed in the go-live gate's browser"
+    },
+    {
+      "id": "journey:cancel-a-booking",
+      "ok": true,
+      "evidence": "1 items passed in the go-live gate's browser"
+    },
+    {
+      "id": "journey:move-a-booking",
+      "ok": true,
+      "evidence": "1 items passed in the go-live gate's browser"
+    },
+    {
+      "id": "journey:customer-account",
+      "ok": true,
+      "evidence": "2 items passed in the go-live gate's browser"
+    },
+    {
+      "id": "journey:set-up-services",
+      "ok": true,
+      "evidence": "1 items passed in the go-live gate's browser"
+    },
+    {
+      "id": "journey:set-hours",
+      "ok": true,
+      "evidence": "2 items passed in the go-live gate's browser"
+    },
+    {
+      "id": "journey:run-the-diary",
+      "ok": true,
+      "evidence": "2 items passed in the go-live gate's browser"
+    },
+    {
+      "id": "journey:give-a-role",
+      "ok": true,
+      "evidence": "1 items passed in the go-live gate's browser"
+    },
+    {
+      "id": "journey:manage-records",
+      "ok": true,
+      "evidence": "1 items passed in the go-live gate's browser"
+    },
+    {
+      "id": "journey:see-email-status",
+      "ok": true,
+      "evidence": "1 items passed in the go-live gate's browser"
+    },
+    {
+      "id": "journey:class-places",
+      "ok": true,
+      "evidence": "1 items passed in the go-live gate's browser"
+    },
+    {
+      "id": "authorization",
+      "ok": true,
+      "evidence": "11 account checks passed: signed-out, owner-pass, owner-pass-once, sign-up, server-role, not-owner, session, forged-session, cross-site, sign-out, sign-in."
+    },
+    {
+      "id": "browser",
+      "ok": true,
+      "evidence": "visual-server: peak unread (page cache included), working set up to 135 MiB, anon up to unread, tmpfs (shmem) up to unread (docker stats); visual-server: peak unread (page cache included), working set up to 133 MiB, anon up to unread, tmpfs (shmem) up to unread (docker stats); visual-server: peak un"
+    },
+    {
+      "id": "client-secrets",
+      "ok": true,
+      "evidence": "70 browser files scanned after a stand-in-secret build; no secrets found."
+    },
+    {
+      "id": "tree",
+      "ok": true,
+      "evidence": "179 source files unchanged through generate, lint, typecheck, all tests and production build."
+    }
+  ],
+  "measured": {
+    "on": "2026-11-01",
+    "by": "person",
+    "draft": {
+      "peakMiB": 1216,
+      "limitMiB": 2048,
+      "firstAnswerSeconds": 9
+    },
+    "verifier": {
+      "peakMiB": 1602,
+      "limitMiB": 2048,
+      "seconds": 49
+    },
+    "browser": {
+      "peakMiB": 153,
+      "limitMiB": 1024
+    }
+  }
+}

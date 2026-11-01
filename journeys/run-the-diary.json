@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "id": "owner-names-the-business",
+      "label": "The owner names the business, and the booking page shows it",
+      "steps": [
+        { "enterAs": "owner" },
+        { "goto": "/owner/settings" },
+        { "expectHeading": "Settings" },
+        { "fill": "Business name", "value": "Northside Clinic" },
+        { "click": "Save settings" },
+        { "expectText": "Settings saved." },
+        { "goto": "/" },
+        { "expectHeading": "Northside Clinic" }
+      ]
+    },
+    {
+      "id": "owner-sees-the-week",
+      "label": "The owner opens today's page and the week's bookings",
+      "steps": [
+        { "enterAs": "owner" },
+        { "goto": "/owner" },
+        { "expectText": "Your booking page" },
+        { "goto": "/owner/bookings" },
+        { "expectHeading": "Bookings" },
+        { "click": "Next week" },
+        { "expectHeading": "Bookings" }
+      ]
+    }
+  ],
+  "names": {}
+}

@@ -1,0 +1,12 @@
+node_modules/
+.next/
+.pnpm-store/
+.runtime/
+.local-postgres/
+.evidence/
+.env
+.env.*
+*.tsbuildinfo
+next-env.d.ts
+app/routes.generated.ts
+.scratch/

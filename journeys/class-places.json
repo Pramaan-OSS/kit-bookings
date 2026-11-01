@@ -1,0 +1,74 @@
+{
+  "items": [
+    {
+      "id": "class-places",
+      "label": "class places",
+      "steps": [
+        {
+          "enterAs": "owner"
+        },
+        {
+          "goto": "/owner/classes"
+        },
+        {
+          "fill": "Class name",
+          "value": "Studio workshop"
+        },
+        {
+          "fill": "Starts",
+          "value": "2099-12-10T10:00"
+        },
+        {
+          "fill": "Finishes",
+          "value": "2099-12-10T11:00"
+        },
+        {
+          "fill": "Places",
+          "value": "2"
+        },
+        {
+          "click": "Save class"
+        },
+        {
+          "expectText": "Studio workshop"
+        },
+        {
+          "enterAs": "visitor"
+        },
+        {
+          "goto": "/account"
+        },
+        {
+          "fill": "Email",
+          "value": "class-member@example.test"
+        },
+        {
+          "fill": "Password",
+          "value": "a long class password 123"
+        },
+        {
+          "click": "Create account"
+        },
+        {
+          "expectHeading": "Your bookings"
+        },
+        {
+          "goto": "/classes"
+        },
+        {
+          "click": "Book a place"
+        },
+        {
+          "expectText": "1 place left"
+        },
+        {
+          "click": "Cancel my place"
+        },
+        {
+          "expectText": "2 places left"
+        }
+      ]
+    }
+  ],
+  "names": {}
+}

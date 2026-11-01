@@ -1,0 +1,24 @@
+{
+  "items": [
+    {
+      "id": "cancel-a-booking",
+      "label": "A visitor cancels from their confirmation page, with no account",
+      "steps": [
+        { "goto": "/" },
+        { "click": "Quick follow-up" },
+        { "click": "Next available time" },
+        { "fill": "Your name", "value": "Alan Turing" },
+        { "fill": "Email", "value": "alan@example.com" },
+        { "fill": "Phone", "value": "+44 161 496 0000" },
+        { "click": "Confirm booking" },
+        { "expectHeading": "You're booked" },
+        { "click": "Cancel booking" },
+        { "expectHeading": "Cancel this booking?" },
+        { "click": "Yes, cancel it" },
+        { "expectHeading": "Booking cancelled" },
+        { "expectAbsent": "Move to another time" }
+      ]
+    }
+  ],
+  "names": {}
+}

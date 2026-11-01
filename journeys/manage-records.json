@@ -1,0 +1,56 @@
+{
+  "items": [
+    {
+      "id": "manage-records",
+      "label": "manage records",
+      "steps": [
+        {
+          "enterAs": "owner"
+        },
+        {
+          "goto": "/records/note"
+        },
+        {
+          "expectHeading": "Preparation notes"
+        },
+        {
+          "click": "Add a record"
+        },
+        {
+          "fill": "Title",
+          "value": "Prepare the studio"
+        },
+        {
+          "click": "Save"
+        },
+        {
+          "expectText": "Prepare the studio"
+        },
+        {
+          "click": "Edit Prepare the studio"
+        },
+        {
+          "fill": "Title",
+          "value": "Prepare the room"
+        },
+        {
+          "click": "Save"
+        },
+        {
+          "expectText": "Prepare the room"
+        },
+        {
+          "fill": "Search",
+          "value": "room"
+        },
+        {
+          "click": "Search"
+        },
+        {
+          "expectText": "1 record, page 1 of 1"
+        }
+      ]
+    }
+  ],
+  "names": {}
+}

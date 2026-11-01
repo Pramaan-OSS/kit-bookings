@@ -1,0 +1,21 @@
+{
+  "items": [
+    {
+      "id": "owner-adds-a-service",
+      "label": "The owner adds a service, and visitors can book it",
+      "steps": [
+        { "enterAs": "owner" },
+        { "goto": "/owner/services" },
+        { "expectHeading": "Services" },
+        { "click": "Add a service" },
+        { "fill": "Name", "value": "Beard trim" },
+        { "fill": "Length in minutes", "value": "20" },
+        { "click": "Save service" },
+        { "expectText": "Saved Beard trim." },
+        { "goto": "/" },
+        { "expectText": "Beard trim" }
+      ]
+    }
+  ],
+  "names": {}
+}

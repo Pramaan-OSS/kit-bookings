@@ -1,0 +1,50 @@
+{
+  "items": [
+    {
+      "id": "book-a-slot",
+      "label": "A visitor books the next free time for a service and sees their confirmation",
+      "steps": [
+        { "goto": "/" },
+        { "expectHeading": "Choose a service" },
+        { "click": "First consultation" },
+        { "expectHeading": "Choose a time" },
+        { "click": "Next available time" },
+        { "expectHeading": "Your details" },
+        { "fill": "Your name", "value": "Ada Lovelace" },
+        { "fill": "Email", "value": "ada@example.com" },
+        { "fill": "Phone", "value": "+44 20 7946 0000" },
+        { "click": "Confirm booking" },
+        { "expectHeading": "You're booked" },
+        { "expectText": "First consultation" },
+        { "expectText": "Add to calendar" }
+      ]
+    },
+    {
+      "id": "book-a-slot-checks-details",
+      "label": "A phone number that isn't one is refused, and nothing is booked",
+      "steps": [
+        { "goto": "/" },
+        { "click": "Standard appointment" },
+        { "click": "Next available time" },
+        { "fill": "Your name", "value": "Grace Hopper" },
+        { "fill": "Email", "value": "grace@example.com" },
+        { "fill": "Phone", "value": "call me" },
+        { "click": "Confirm booking" },
+        { "expectText": "Enter a phone number we can reach you on." },
+        { "expectAbsent": "You're booked" }
+      ]
+    },
+    {
+      "id": "book-a-slot-on-a-phone",
+      "label": "The booking page fits a phone, with controls big enough to tap",
+      "viewport": { "width": 390, "height": 844 },
+      "steps": [
+        { "goto": "/" },
+        { "expectHeading": "Choose a service" },
+        { "expectNoHorizontalScroll": true },
+        { "expectMinTapHeight": 44 }
+      ]
+    }
+  ],
+  "names": {}
+}

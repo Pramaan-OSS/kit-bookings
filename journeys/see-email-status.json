@@ -1,0 +1,23 @@
+{
+  "items": [
+    {
+      "id": "see-email-status",
+      "label": "see email status",
+      "steps": [
+        {
+          "enterAs": "owner"
+        },
+        {
+          "goto": "/owner/email"
+        },
+        {
+          "expectHeading": "Email notices"
+        },
+        {
+          "expectText": "Email isn't switched on for this app yet."
+        }
+      ]
+    }
+  ],
+  "names": {}
+}
