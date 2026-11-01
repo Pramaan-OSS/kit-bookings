@@ -112,12 +112,24 @@
       "id": "theme",
       "version": "0.1.0",
       "source": "Pramaan-OSS/blocks",
-      "sourceCommit": "8a501e537c345d15d47d44814f79eb2121f7f654",
+      "sourceCommit": "a61a2af8cf6d1625959356afc0b9be8557db0cbb",
       "sourcePath": "registry/theme",
       "licence": "MIT",
       "sourceHashes": {
         "theme.css": "39e6aafb751ce69c964c0db7917af1b5112d9e64d0f9a5b2e38f48b1223bbdbc",
         "registry/theme/lib/pramaan/fonts.ts": "de90da679c962d19170f0dcd78f69558b435dd8a8aeba8b3bc176ecc754ff410"
+      }
+    },
+    {
+      "id": "password-reset",
+      "version": "0.1.0",
+      "source": "Pramaan-OSS/blocks",
+      "sourceCommit": "a61a2af8cf6d1625959356afc0b9be8557db0cbb",
+      "sourcePath": "registry/password-reset",
+      "licence": "MIT",
+      "sourceHashes": {
+        "registry/password-reset/README.md": "4e0fe6d2ac9063be68a3a1d94e86b87d95be15e5198a30e2b06cf0afa5f3208f",
+        "registry/password-reset/lib/pramaan/password-reset.ts": "a7f3b5b19c8518bd5ee1a6685049a20c15133ed5ac226ad049d2288c9253c55b"
       }
     }
   ],
@@ -126,6 +138,7 @@
     "time-slots": "Pure availability and zone engines drive the visitor diary. Account-only routes and parallel resource tables replaced by the reference normalized service and staff schema; Postgres hold and class locking added.",
     "roles": "Shared connection pool; deny-by-default guards and owner role grants retained.",
     "admin-table": "Preparation notes added; raw identifiers omitted from exports.",
-    "email-notices": "Shared connection pool; platform door and off-state status retained."
+    "email-notices": "Shared connection pool; platform door and off-state status retained.",
+    "password-reset": "Only the password crypto helpers are used, extracted to lib/password.ts, retaining both formats and the four-derive cap. Sign-in atomically compares the old hash and invalidates sessions before creating a new session."
   }
 }

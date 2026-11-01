@@ -160,7 +160,7 @@ try {
   await writeFile(
     ".evidence/walk.json",
     JSON.stringify(
-      { port: 3306, headless: true, results, ownerPass: true, pageErrors: errors },
+      { port: 3411, headless: true, results, ownerPass: true, pageErrors: errors },
       null,
       2,
     ),

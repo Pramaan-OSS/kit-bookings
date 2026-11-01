@@ -8,6 +8,8 @@
       "!product",
       "!**/.next",
       "!**/.pnpm-store",
+      "!**/.evidence",
+      "!**/.scratch",
       "!next-env.d.ts",
       "!app/routes.generated.ts"
     ]

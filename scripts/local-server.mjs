@@ -6,12 +6,12 @@ await mkdir(".evidence", { recursive: true });
 const config = {
   secret: randomBytes(32).toString("hex"),
   project: "bookings-local",
-  origin: "http://127.0.0.1:3306",
+  origin: "http://127.0.0.1:3411",
 };
 await writeFile(".evidence/runtime.json", JSON.stringify(config), { mode: 0o600 });
 const child = spawn(
   process.execPath,
-  ["node_modules/next/dist/bin/next", "start", "-p", "3306", "-H", "127.0.0.1"],
+  ["node_modules/next/dist/bin/next", "start", "-p", "3411", "-H", "127.0.0.1"],
   {
     stdio: "inherit",
     env: {

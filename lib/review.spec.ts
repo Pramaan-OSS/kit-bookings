@@ -40,7 +40,7 @@ describe("kit review boundaries", () => {
   it("records the owner-selected MIT theme commit", () => {
     const lock = JSON.parse(read("blocks.lock.json"));
     const theme = lock.blocks.find((b: { id: string }) => b.id === "theme");
-    expect(theme.sourceCommit.startsWith("8a501e5")).toBe(true);
+    expect(theme.sourceCommit.startsWith("a61a2af")).toBe(true);
     expect(theme.licence).toBe("MIT");
     expect(theme.sourceHashes["theme.css"]).toBe(
       "39e6aafb751ce69c964c0db7917af1b5112d9e64d0f9a5b2e38f48b1223bbdbc",
