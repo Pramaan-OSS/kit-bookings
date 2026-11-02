@@ -11,7 +11,7 @@
     "generate": "node scripts/generate-routes.mjs",
     "lint": "node scripts/check-imports.mjs && biome check .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --exclude \".evidence/**\" --exclude \".scratch/**\"",
+    "test": "vitest run --no-file-parallelism --exclude \".evidence/**\" --exclude \".scratch/**\"",
     "build": "node scripts/generate-routes.mjs && next build",
     "start": "next start",
     "check": "pnpm generate && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
