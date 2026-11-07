@@ -12,6 +12,12 @@ import {
   type ReserveTx,
   reserve,
   type ServiceTerms,
+  SLOT_CLOSED,
+  SLOT_OFF_HOURS,
+  SLOT_PASSED,
+  SLOT_TAKEN,
+  SLOT_TOO_FAR,
+  SLOT_TOO_SOON,
   SlotTakenError,
   type Transact,
 } from "./reserve";
@@ -35,7 +41,11 @@ class Mutex {
 
 type Row = NewBooking & { status: "confirmed" | "cancelled" | "rescheduled" };
 
-function memoryStore({ lock = true, uniqueIndex = true } = {}) {
+function memoryStore({
+  lock = true,
+  uniqueIndex = true,
+  daysOff = {} as Record<string, string[]>,
+} = {}) {
   const rows: Row[] = [];
   const locks = new Map<string, Mutex>();
   const inFlight = new Set<NewBooking>();
@@ -73,7 +83,7 @@ function memoryStore({ lock = true, uniqueIndex = true } = {}) {
             (row) => row.staffId === staffId && row.status === "confirmed" && row.id !== exclude,
           )
           .map(busyOf);
-        return { hours, daysOff: [], busy };
+        return { hours, daysOff: daysOff[staffId] ?? [], busy };
       },
       async insert(booking) {
         await tick();
@@ -225,6 +235,34 @@ describe("no double booking", () => {
     expect(booked).toHaveLength(2);
     expect(refused).toHaveLength(4);
     expect(new Set(store.rows.map((row) => row.staffId))).toEqual(new Set(["ana", "ben"]));
+  });
+
+  it("says why a start is refused: its own words for each rule, 'taken' only for a real overlap", async () => {
+    const store = memoryStore({ daysOff: { ana: ["2026-11-04"] } });
+    const refusal = (start: string, staffIds = ["ana"]) => {
+      const input = attempt(start, staffIds);
+      return reserve(store.transact, {
+        ...input,
+        rules: { ...input.rules, minNoticeMinutes: 120 },
+      }).then(
+        () => "booked",
+        (error: Error) => {
+          expect(error).toBeInstanceOf(SlotTakenError);
+          return error.message;
+        },
+      );
+    };
+    expect(await refusal("2026-11-02T07:00:00Z")).toBe(SLOT_PASSED);
+    expect(await refusal("2026-11-02T09:00:00Z")).toBe(SLOT_TOO_SOON);
+    expect(await refusal("2027-02-01T10:00:00Z")).toBe(SLOT_TOO_FAR);
+    expect(await refusal("2026-11-03T03:00:00Z")).toBe(SLOT_OFF_HOURS);
+    expect(await refusal("2026-11-03T10:07:00Z")).toBe(SLOT_OFF_HOURS);
+    expect(await refusal("2026-11-04T10:00:00Z")).toBe(SLOT_CLOSED);
+    expect(await refusal("2026-11-03T10:00:00Z")).toBe("booked");
+    expect(await refusal("2026-11-03T10:00:00Z")).toBe(SLOT_TAKEN);
+    // Anyone available: Ana's day off is no answer when Ben works that day and is booked.
+    expect(await refusal("2026-11-04T10:00:00Z", ["ben"])).toBe("booked");
+    expect(await refusal("2026-11-04T10:00:00Z", ["ana", "ben"])).toBe(SLOT_TAKEN);
   });
 
   it("refuses a time outside working hours or already past, even when the page offered it", async () => {

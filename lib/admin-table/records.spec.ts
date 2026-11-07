@@ -67,8 +67,10 @@ describe("the records area's own rules", () => {
 
   it("quotes every CSV cell, and writes a formula as text", () => {
     expect(csvCell(FORMULA)).toBe(`"${FORMULA}"`);
-    for (const formula of ["=SUM(A1)", "+1", "-1", "@cmd", "\tx", "\rx"])
+    for (const formula of ["=SUM(A1)", "+1+1", "-1+1", "-A1", "@cmd", "\tx", "\rx"])
       expect(csvCell(formula)).toBe(`"'${formula}"`);
+    // A plain number stays a number, negative or signed.
+    for (const number of ["-1", "+1", "-12.50", -3]) expect(csvCell(number)).toBe(`"${number}"`);
     expect(csvCell('say "hi", then go')).toBe('"say ""hi"", then go"');
     expect(csvCell(null)).toBe('""');
   });

@@ -5,7 +5,7 @@ import { modulesPresent } from "../../src/lib/pramaan-modules";
 import { accountRuntime, database, sessionSecret } from "../runtime";
 import { formatDuration, isStaffColor } from "./format";
 import { HttpError, instant, line, price, readBody, text, uuid, whole } from "./http";
-import { businessName, composeEmail, deliver } from "./notify";
+import { businessName, composeEmail, deliverWithin } from "./notify";
 import { managePath } from "./public";
 import type { WeeklyHours } from "./slots";
 import {
@@ -320,6 +320,7 @@ export async function changeBooking(request: Request) {
     manageUrl: null,
     showStaff: (await teamSize(db)) > 1,
   });
-  const outcome = await deliver(message);
+  // The cancel has committed: the answer waits for the email only a few seconds, not for a door that hangs.
+  const outcome = await deliverWithin(message);
   return { cancelled: true, email: outcome };
 }

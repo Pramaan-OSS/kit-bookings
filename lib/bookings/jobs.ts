@@ -6,6 +6,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { siteName } from "../../app/site";
 import { scheduleKey } from "../../src/lib/pramaan-modules";
 import { database, sessionSecret } from "../runtime";
+import { readText } from "./http";
 import { businessName, composeEmail, deliver } from "./notify";
 import { manageUrl, originOf } from "./public";
 import { claimDueReminders, firstRun, getBusiness, recordReminder, teamSize } from "./store";
@@ -17,6 +18,8 @@ const PER_RUN = 4;
 /** No new send starts after this: the platform gives a scheduled call 30 s. What isn't tried is released. */
 export const RUN_DEADLINE_MS = 20_000;
 const FRESH_SECONDS = 300;
+/** A scheduled call's body is `{schedule, runId}`: anything longer is refused before it is held, signed or not. */
+export const MAX_JOB_BYTES = 4_096;
 
 /** Whether a scheduled call is genuine: `v1=` HMAC-SHA256(key, "<timestamp>.<body>"), at most five minutes old. */
 export function verifySchedule(
@@ -37,7 +40,7 @@ export function verifySchedule(
 
 /** POST /api/jobs/reminders */
 export async function runReminders(request: Request) {
-  const body = await request.text();
+  const body = await readText(request, MAX_JOB_BYTES);
   const genuine = verifySchedule(
     scheduleKey(),
     request.headers.get("x-pramaan-timestamp") ?? "",

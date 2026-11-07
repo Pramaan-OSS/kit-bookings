@@ -7,7 +7,14 @@ import { accountRuntime, database, sessionSecret } from "../runtime";
 import { foldCalendarLine } from "./calendar";
 import { holdHash, holdSlot } from "./holds";
 import { email, HttpError, instant, line, phone, readBody, text, uuid } from "./http";
-import { businessName, composeEmail, composeOwnerNotice, deliver, type EmailKind } from "./notify";
+import {
+  businessName,
+  composeEmail,
+  composeOwnerNotice,
+  deliver,
+  EMAIL_WAIT_MS,
+  type EmailKind,
+} from "./notify";
 import { reserve } from "./reserve";
 import { availableSlots, slotsAcrossStaff } from "./slots";
 import {
@@ -34,8 +41,6 @@ const MINUTE = 60_000;
 const DAY = 86_400_000;
 /** The most days one slot request may cover (the page asks for a week). */
 const MAX_RANGE_DAYS = 8;
-/** How long a booking waits for its confirmation email before answering; it is recorded either way. */
-const EMAIL_WAIT_MS = 8_000;
 
 /**
  * The app's public address, for links in emails. The platform sets APP_ORIGIN for the draft, the checks and the
@@ -208,11 +213,15 @@ export const LIMITS = Object.freeze({
   changesPerClientHour: 10,
 });
 
-/** Public booking requests: per client an hour, per email a day. */
-async function throttle(request: Request, address: string) {
-  const db = database();
-  const perClient = await hit(db, throttleKey(`client ${clientOf(request)}`), 3600);
-  const perEmail = await hit(db, throttleKey(`email ${address}`), 86_400);
+/**
+ * Public booking requests: per client an hour, and per email from one client a day. The email is one a visitor typed,
+ * not one they own, so its day count is kept for the client and the address together: no one can use up an address's
+ * bookings from elsewhere and lock its real owner out.
+ */
+export async function throttle(request: Request, address: string, db = database()) {
+  const client = clientOf(request);
+  const perClient = await hit(db, throttleKey(`client ${client}`), 3600);
+  const perEmail = await hit(db, throttleKey(`email ${client} ${address}`), 86_400);
   if (perClient > LIMITS.bookingsPerClientHour || perEmail > LIMITS.bookingsPerEmailDay)
     throw new HttpError(
       429,
@@ -233,7 +242,7 @@ async function changeThrottle(request: Request, booking: Booking) {
 }
 
 /** Sends a booking's email in the background of the answer: waits a few seconds, records the outcome whenever. */
-async function sendAndRecord(
+export async function sendAndRecord(
   kind: EmailKind,
   booking: Booking,
   origin: string,
@@ -250,11 +259,17 @@ async function sendAndRecord(
     manageUrl: token ? manageUrl(origin, token) : null,
     showStaff: (await teamSize(db)) > 1,
   });
-  const customer = deliver(message).then(async (outcome) => {
-    if (kind === "confirmation" || kind === "moved")
-      await recordConfirmation(db, booking.id, outcome.status, outcome.note);
-    return outcome;
-  });
+  const customer = deliver(message)
+    .then(async (outcome) => {
+      if (kind === "confirmation" || kind === "moved")
+        await recordConfirmation(db, booking.id, outcome.status, outcome.note);
+      return outcome;
+    })
+    .catch(() => {
+      // It may land after the answer has gone, so this log is all that is left of it. Never the address.
+      console.error("bookings: email outcome not recorded", { kind });
+      return null;
+    });
   const ownerTo = business.notifyOwner && kind !== "reminder" ? await ownerEmail(db) : null;
   if (ownerTo) {
     const notice = composeOwnerNotice({
@@ -267,7 +282,7 @@ async function sendAndRecord(
     void deliver(notice).catch(() => {});
   }
   const waited = await Promise.race([
-    customer.catch(() => null),
+    customer,
     new Promise<null>((resolve) => {
       setTimeout(() => resolve(null), EMAIL_WAIT_MS).unref?.();
     }),

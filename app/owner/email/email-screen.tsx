@@ -45,11 +45,10 @@ export function EmailScreen({ ownerId }: { ownerId: string }) {
       const { result } = await call(ownerId, { nonce });
       if (!result) throw new Error("Please try again.");
       setNonce(crypto.randomUUID());
-      if (result.off) setStatus((current) => (current ? { ...current, off: true } : current));
-      else if (result.status === "sent")
-        setNotice({ tone: "success", text: "Sent. Check that inbox." });
+      if (result.status === "sent") setNotice({ tone: "success", text: "Sent. Check that inbox." });
       else setNotice({ tone: "error", text: result.note || "It was not sent." });
-      if (!result.off) setStatus(await call(ownerId));
+      // The test stays on offer: a sender chosen later is found by the next try, never by reloading.
+      setStatus(await call(ownerId));
     } catch (error) {
       setNotice({
         tone: "error",
@@ -61,7 +60,7 @@ export function EmailScreen({ ownerId }: { ownerId: string }) {
   }
   if (status === null) return <p className="text-muted">One moment…</p>;
   if (status.error) return <Alert tone="error" title={status.error} />;
-  if (status.off)
+  if (!status.available)
     return (
       <Alert title={status.note ?? "Email isn't switched on for this app yet."}>
         Everything else in the app works as normal. Nothing is held back to send later.

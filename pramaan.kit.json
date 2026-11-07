@@ -1,6 +1,6 @@
 {
   "id": "bookings",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "title": "Bookings",
   "summary": "Appointments and class places for salons and studios. Visitors book, move or cancel; the owner manages services, staff, hours and capacity.",
   "category": "scheduling",

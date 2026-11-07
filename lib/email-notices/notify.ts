@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { Database } from "../roles/guard";
 import type { Door } from "./door";
 import { type Data, render } from "./templates";
+import { PENDING_NOTE } from "./words";
 
 export type Notice = {
   /** A name in TEMPLATES (lib/email-notices/templates.ts). */
@@ -12,9 +13,12 @@ export type Notice = {
   to: string;
   data?: Data;
 };
-/** `skipped`: this event was already sent, or is being sent, and nothing was done. `off`: email is not switched on. */
+/**
+ * `skipped`: this event was already sent, or is being sent, and nothing was done. `pending`: the platform had not
+ * answered within WAIT_MS; the send goes on, and its outcome is recorded when it lands. `off`: email is not switched on.
+ */
 export type Result = {
-  status: "sent" | "not-sent" | "unknown" | "skipped";
+  status: "sent" | "not-sent" | "unknown" | "skipped" | "pending";
   off: boolean;
   note: string;
 };
@@ -29,6 +33,11 @@ const ADDRESS =
  */
 const STALE_MINUTES = 10;
 const STALE_HOURS = 23;
+/**
+ * The longest `notify` holds the request that called it. The door may take 70 s to give up, and a person whose save
+ * hangs that long thinks it failed and tries again; the bookings kit waits as long (`EMAIL_WAIT_MS`).
+ */
+const WAIT_MS = 8_000;
 
 /**
  * The Idempotency-Key of an event: the same template and event always make the same key, so a retry, a restart and
@@ -47,16 +56,19 @@ export function eventKey(template: string, event: string) {
  * 3. The outcome is recorded: which template, how it went. Never the address, subject or text.
  *
  * `notify` never throws for an outcome: a booking is saved whether or not its email goes, and the result says what
- * happened. With email off nothing is sent, nothing is queued, and the result says so (`off`).
+ * happened. With email off nothing is sent, nothing is queued, and the result says so (`off`). It answers within
+ * `waitMs`: a send still going then is `pending`, and is recorded when the platform answers.
  */
 export function createNotifier({
   db,
   door,
   log = console,
+  waitMs = WAIT_MS,
 }: {
   db: () => Database;
   door: Door;
   log?: Log;
+  waitMs?: number;
 }) {
   async function notify(notice: Notice): Promise<Result> {
     const { template, event, to } = notice;
@@ -107,21 +119,32 @@ export function createNotifier({
         note: "The email could not be recorded, so it was not sent.",
       };
     }
-    const outcome = await door.send({ to, subject: message.subject, text: message.text }, key);
-    const status = outcome.status;
-    const off = outcome.status === "not-sent" && outcome.off;
-    const note = outcome.status === "sent" ? "" : outcome.message;
-    try {
-      await db().query(
-        "UPDATE app_email_notices SET status=$2,off=$3,note=$4,updated_at=now() WHERE event_key=$1",
-        [key, status, off, note],
-      );
-    } catch {
-      log.error("email notice outcome not recorded", { template, status });
-    }
-    // The platform's refusals are not the app's to hide; the template and status say enough, and never who it was for.
-    if (status !== "sent" && !off) log.error("email notice not sent", { template, status });
-    return { status, off, note };
+    const recorded = door
+      .send({ to, subject: message.subject, text: message.text }, key)
+      .then(async (outcome): Promise<Result> => {
+        const status = outcome.status;
+        const off = outcome.status === "not-sent" && outcome.off;
+        const note = outcome.status === "sent" ? "" : outcome.message;
+        try {
+          await db().query(
+            "UPDATE app_email_notices SET status=$2,off=$3,note=$4,updated_at=now() WHERE event_key=$1",
+            [key, status, off, note],
+          );
+        } catch {
+          log.error("email notice outcome not recorded", { template, status });
+        }
+        // The platform's refusals are not the app's to hide; the template and status say enough, never who it was for.
+        if (status !== "sent" && !off) log.error("email notice not sent", { template, status });
+        return { status, off, note };
+      });
+    const waited = await Promise.race([
+      recorded,
+      new Promise<null>((resolve) => {
+        setTimeout(() => resolve(null), waitMs).unref?.();
+      }),
+    ]);
+    // The claim stays `pending` until the send lands; a claim whose send never does is tried again (STALE_MINUTES).
+    return waited ?? { status: "pending", off: false, note: PENDING_NOTE };
   }
   return { notify };
 }
@@ -139,8 +162,9 @@ export async function noticeStatus(db: Database, door: Door) {
     `SELECT template,status,off,note,updated_at FROM app_email_notices
     WHERE status<>'pending' ORDER BY updated_at DESC LIMIT 20`,
   );
-  // A sender may be missing even when the module is on: the last send says so, and that is "off" too.
-  const off = !available || recent.rows[0]?.off === true;
+  // Off is the module's answer alone. A sender may still be missing with the module on: the last send says so in
+  // `recent`, and the owner can send a test to check again, so the page never stays stuck on an old outcome.
+  const off = !available;
   return {
     available,
     off,

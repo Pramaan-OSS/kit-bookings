@@ -18,15 +18,10 @@ export function reply(value: unknown, status = 200) {
   return Response.json(value, { status, headers: { "cache-control": "no-store" } });
 }
 
-/** A JSON object from a same-origin POST, or an HttpError a person can act on. */
-export async function readBody(request: Request): Promise<Record<string, unknown>> {
-  const origin = process.env.APP_ORIGIN ?? new URL(request.url).origin;
-  if (request.headers.get("origin") !== origin)
-    throw new HttpError(403, "Refresh this page and try again.");
-  if (!request.headers.get("content-type")?.startsWith("application/json"))
-    throw new HttpError(415, "Send JSON.");
+/** A request's body as text, at most `maxBytes` of it: a 413 HttpError as soon as more arrives. */
+export async function readText(request: Request, maxBytes = MAX_BODY_BYTES) {
   const reader = request.body?.getReader();
-  if (!reader) throw new HttpError(400, "A request body is required.");
+  if (!reader) return "";
   const parts: Uint8Array[] = [];
   let bytes = 0;
   try {
@@ -34,7 +29,7 @@ export async function readBody(request: Request): Promise<Record<string, unknown
       const next = await reader.read();
       if (next.done) break;
       bytes += next.value.byteLength;
-      if (bytes > MAX_BODY_BYTES) {
+      if (bytes > maxBytes) {
         await reader.cancel();
         throw new HttpError(413, "This request is too large.");
       }
@@ -43,8 +38,20 @@ export async function readBody(request: Request): Promise<Record<string, unknown
   } finally {
     reader.releaseLock();
   }
+  return Buffer.concat(parts).toString("utf8");
+}
+
+/** A JSON object from a same-origin POST, or an HttpError a person can act on. */
+export async function readBody(request: Request): Promise<Record<string, unknown>> {
+  const origin = process.env.APP_ORIGIN ?? new URL(request.url).origin;
+  if (request.headers.get("origin") !== origin)
+    throw new HttpError(403, "Refresh this page and try again.");
+  if (!request.headers.get("content-type")?.startsWith("application/json"))
+    throw new HttpError(415, "Send JSON.");
+  if (!request.body) throw new HttpError(400, "A request body is required.");
+  const body = await readText(request);
   try {
-    const value: unknown = JSON.parse(Buffer.concat(parts).toString("utf8"));
+    const value: unknown = JSON.parse(body);
     if (value !== null && typeof value === "object" && !Array.isArray(value))
       return value as Record<string, unknown>;
   } catch {

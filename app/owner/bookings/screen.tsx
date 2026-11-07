@@ -108,7 +108,9 @@ export default function OwnerBookings() {
       setNotice(
         result.email.status === "sent"
           ? `Cancelled. ${booking.customerName} has been emailed.`
-          : `Cancelled. ${booking.customerName} could not be emailed (${result.email.note}) Let them know yourself.`,
+          : result.email.status === "unknown"
+            ? `Cancelled. ${result.email.note}`
+            : `Cancelled. ${booking.customerName} could not be emailed (${result.email.note}) Let them know yourself.`,
       );
       setOpen(null);
       setConfirmCancel(false);

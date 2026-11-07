@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { testDatabaseUrl, warmPool } from "../test-database";
+import { LIMITS, throttle } from "./public";
 import { reserve, SlotTakenError } from "./reserve";
 import {
   cancelBooking,
@@ -158,6 +159,58 @@ describe.skipIf(!url)("bookings on Postgres", () => {
     // A sent reminder is never claimed again.
     await recordReminder(pool, id, "sent", false);
     expect(await claims(now + 5 * HOUR)).toBe(0);
+  });
+
+  it("refuses the owner's cancel of a booking that has started", async () => {
+    const service = await getService(pool, SERVICE);
+    if (!service) throw new Error("the starting diary is missing");
+    const day = new Date();
+    day.setUTCDate(day.getUTCDate() + 2);
+    while (day.getUTCDay() !== 4) day.setUTCDate(day.getUTCDate() + 1);
+    day.setUTCHours(10, 0, 0, 0);
+    const startsAt = day.getTime();
+    const id = randomUUID();
+    await reserve(transactor(pool), {
+      service,
+      staffIds: [STAFF],
+      startsAt,
+      rules: { timeZone: "UTC", stepMinutes: 15, minNoticeMinutes: 120, maxDaysAhead: 60 },
+      now: Date.now(),
+      replaces: null,
+      booking: {
+        id,
+        customerName: "Past",
+        customerEmail: "past@example.com",
+        customerPhone: "+44 20 7946 0000",
+        customerTimeZone: "UTC",
+        notes: "",
+        customerId: null,
+        manageNonce: newManageNonce(),
+      },
+    });
+    expect(await cancelBooking(pool, id, "owner", startsAt + MINUTE)).toBeNull();
+    const { rows } = await pool.query("SELECT status FROM bookings WHERE id = $1", [id]);
+    expect(rows[0]?.status).toBe("confirmed");
+  });
+
+  it("counts a visitor's bookings per address from one client, so no one can lock an address out from elsewhere", async () => {
+    process.env.SESSION_SECRET = "a".repeat(40);
+    const from = (client: string) =>
+      new Request("http://app.test/api/booking/book", { headers: { "x-forwarded-for": client } });
+    const victim = "victim@mail.test";
+    for (let n = 0; n < LIMITS.bookingsPerEmailDay + 5; n++)
+      await throttle(from("203.0.113.7"), victim, pool).catch(() => {});
+    // The same client is held to the day's count for that address...
+    await expect(throttle(from("203.0.113.7"), victim, pool)).rejects.toMatchObject({
+      status: 429,
+    });
+    // ...and the address's real owner, from anywhere else, books freely.
+    await expect(throttle(from("198.51.100.9"), victim, pool)).resolves.toBeUndefined();
+    // The table holds no client address or email as written.
+    const { rows } = await pool.query(
+      "SELECT count(*)::int AS raw FROM booking_throttle WHERE key ~ '203\\.0\\.113|198\\.51\\.100|victim'",
+    );
+    expect(rows[0]?.raw).toBe(0);
   });
 
   it("counts throttle hits in a window, and starts again once it has passed", async () => {

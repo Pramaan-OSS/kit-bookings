@@ -288,7 +288,7 @@ export async function saveRecord(
 /**
  * One CSV cell, always quoted, so no separator a spreadsheet splits on (a comma, or a semicolon in many locales) and
  * no line break ends it early. A cell a spreadsheet would run as a formula (starting =, +, -, @, a tab or a carriage
- * return) is written as text, behind a '.
+ * return) is written as text, behind a '. A plain number, negative or signed, is left a number.
  */
 export function csvCell(value: unknown) {
   const text =
@@ -297,7 +297,7 @@ export function csvCell(value: unknown) {
       : value instanceof Date
         ? value.toISOString()
         : String(value);
-  const safe = /^[=+\-@\t\r]/u.test(text) ? `'${text}` : text;
+  const safe = /^([=@\t\r]|[+-](?!\d+(\.\d+)?$))/u.test(text) ? `'${text}` : text;
   return `"${safe.replaceAll('"', '""')}"`;
 }
 

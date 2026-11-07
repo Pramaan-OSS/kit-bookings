@@ -151,4 +151,43 @@ describe.skipIf(!url)("holds and class places on Postgres", () => {
     await classPlace(pool, session.id, outsider);
     expect((await classList(pool, null))[0].taken).toBe(2);
   });
+  it("releases a member with a class place: their rows go and their booking loses only its link", async () => {
+    await addClass(pool, {
+      name: "Released class",
+      startsAt: Date.now() + 2 * 86400_000,
+      endsAt: Date.now() + 2 * 86400_000 + 3600_000,
+      capacity: 1,
+    });
+    const session = (await classList(pool, null)).find((c) => c.name === "Released class");
+    const [member, next] = [randomUUID(), randomUUID()];
+    for (const id of [member, next])
+      await pool.query("INSERT INTO app_users(id,email,password_hash) VALUES($1,$2,'unused')", [
+        id,
+        `${id}@example.test`,
+      ]);
+    await classPlace(pool, session.id, member);
+    await expect(classPlace(pool, session.id, next)).rejects.toThrow("full");
+    await pool.query("INSERT INTO app_role_members(user_id,role) VALUES($1,'staff')", [member]);
+    const booking = randomUUID();
+    await pool.query(
+      `INSERT INTO bookings(id,service_id,staff_id,starts_at,ends_at,service_name,customer_name,customer_email,
+      customer_phone,customer_id,manage_nonce)
+      VALUES($1,$2,$3,now()+interval '30 days',now()+interval '31 days','Visit','Sam','sam@example.test','1',$4,$5)`,
+      [booking, input.service.id, input.staffIds[0], member, "a".repeat(32)],
+    );
+    const released = await pool.query("DELETE FROM app_users WHERE email=$1 AND role='member'", [
+      `${member}@example.test`,
+    ]);
+    expect(released.rowCount).toBe(1);
+    for (const table of ["class_places", "app_role_members", "app_sessions", "app_tasks"])
+      expect((await pool.query(`SELECT 1 FROM ${table} WHERE user_id=$1`, [member])).rowCount).toBe(
+        0,
+      );
+    const kept = await pool.query("SELECT customer_id,customer_email FROM bookings WHERE id=$1", [
+      booking,
+    ]);
+    expect(kept.rows[0]).toEqual({ customer_id: null, customer_email: "sam@example.test" });
+    // The freed place is really free: capacity counts rows.
+    await classPlace(pool, session.id, next);
+  });
 });

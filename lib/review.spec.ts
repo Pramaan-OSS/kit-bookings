@@ -1,7 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { ENTITIES } from "./admin-table/entities";
+import { database as rolesDatabase } from "./roles/database";
 import { createRoleGuard } from "./roles/guard";
+import { database } from "./runtime";
 import { testDatabaseUrl } from "./test-database";
 
 const read = (p: string) => readFileSync(p, "utf8");
@@ -16,6 +18,12 @@ describe("kit review boundaries", () => {
     for (const file of ["lib/bookings/holds.pg.spec.ts", "lib/bookings/store.pg.spec.ts"])
       expect(read(file)).toContain("const url = testDatabaseUrl()");
     expect(testDatabaseUrl({ DATABASE_URL: "gate", TEST_DATABASE_URL: "test" })).toBe("test");
+  });
+  it("shows the off note only when the email module is off, so the test stays on offer", () => {
+    expect(read("app/owner/email/email-screen.tsx")).toContain("if (!status.available)");
+  });
+  it("opens one connection pool: the roles block shares the app's", () => {
+    expect(rolesDatabase).toBe(database);
   });
   it("ships no organisation account or direct platform-key transport", () => {
     const pkg = JSON.parse(read("package.json"));

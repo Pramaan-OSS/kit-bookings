@@ -104,8 +104,7 @@ export const emailDoor: Door = {
         /* no detail */
       }
       const error = typeof detail.error === "string" ? detail.error : "";
-      if (OFF_ERRORS.includes(error) || answer.status === 403)
-        return { status: "not-sent", off: true, message: OFF_NOTE };
+      if (OFF_ERRORS.includes(error)) return { status: "not-sent", off: true, message: OFF_NOTE };
       const said = typeof detail.message === "string" ? detail.message.slice(0, 300) : "";
       if (UNKNOWN_ERRORS.includes(error) || answer.status === 504)
         return {

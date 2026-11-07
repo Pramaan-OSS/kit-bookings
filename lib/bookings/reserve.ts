@@ -9,6 +9,7 @@
 // The store is an interface so the protocol is tested without a database (lib/bookings/reserve.spec.ts); the
 // Postgres one is lib/bookings/store.ts.
 import { availableSlots, type Busy, type SlotRules, type WeeklyHours } from "./slots";
+import { daysBetween, localDateOf } from "./time";
 
 const MINUTE = 60_000;
 
@@ -63,9 +64,17 @@ export interface ReserveTx {
 /** Runs `work` in a transaction: commits what it returns, rolls back on a throw. */
 export type Transact = <T>(work: (tx: ReserveTx) => Promise<T>) => Promise<T>;
 
+export const SLOT_TAKEN = "Sorry, that time was just taken. Please pick another.";
+export const SLOT_PASSED = "That time has already passed. Please pick another.";
+export const SLOT_TOO_SOON = "That time is too soon to book. Please pick a later one.";
+export const SLOT_TOO_FAR = "That day is too far ahead to book yet. Please pick an earlier one.";
+export const SLOT_CLOSED = "We're closed that day. Please pick another.";
+export const SLOT_OFF_HOURS = "That isn't a time we offer. Please pick one from the list.";
+
+/** A start that cannot be booked: taken, unless `message` gives the rule it breaks (whyNotOffered). */
 export class SlotTakenError extends Error {
-  constructor() {
-    super("Sorry, that time was just taken. Please pick another.");
+  constructor(message = SLOT_TAKEN) {
+    super(message);
   }
 }
 export class BookingGoneError extends Error {
@@ -97,7 +106,33 @@ export type ReserveInput = {
   >;
 };
 
-/** Books the slot with the first person free at that time, or throws SlotTakenError. */
+/**
+ * Why `startsAt` is not on offer: the first rule it breaks, in its own words, and "just taken" only for a start the
+ * rules allow that another booking now holds. Called only after the slot check has refused the start.
+ */
+function whyNotOffered(
+  rules: SlotRules,
+  day: Awaited<ReturnType<ReserveTx["schedule"]>>,
+  startsAt: number,
+  now: number,
+) {
+  if (startsAt < now) return SLOT_PASSED;
+  if (startsAt < now + rules.minNoticeMinutes * MINUTE) return SLOT_TOO_SOON;
+  const date = localDateOf(startsAt, rules.timeZone);
+  if (daysBetween(localDateOf(now, rules.timeZone), date) > rules.maxDaysAhead) return SLOT_TOO_FAR;
+  if (day.daysOff.includes(date)) return SLOT_CLOSED;
+  const unbooked = availableSlots({
+    rules,
+    ...day,
+    busy: [],
+    from: startsAt,
+    to: startsAt + 1,
+    now,
+  });
+  return unbooked[0] === startsAt ? SLOT_TAKEN : SLOT_OFF_HOURS;
+}
+
+/** Books the slot with the first person free at that time, or throws SlotTakenError saying why not. */
 export async function reserve(transact: Transact, input: ReserveInput) {
   const { service, startsAt, now } = input;
   const rules: SlotRules = {
@@ -107,6 +142,7 @@ export async function reserve(transact: Transact, input: ReserveInput) {
     bufferAfterMinutes: service.bufferAfterMinutes,
   };
   const endsAt = startsAt + service.durationMinutes * MINUTE;
+  const refusals = new Set<string>();
   for (const staffId of input.staffIds) {
     const booked = await transact(async (tx) => {
       if (input.replaces && !(await tx.lockReplaced(input.replaces, now)))
@@ -123,7 +159,10 @@ export async function reserve(transact: Transact, input: ReserveInput) {
         to: startsAt + 1,
         now,
       });
-      if (free[0] !== startsAt) return false;
+      if (free[0] !== startsAt) {
+        refusals.add(whyNotOffered(rules, day, startsAt, now));
+        return false;
+      }
       if (input.replaces) await tx.markRescheduled(input.replaces);
       const inserted = await tx.insert({
         ...input.booking,
@@ -141,10 +180,12 @@ export async function reserve(transact: Transact, input: ReserveInput) {
       if (!inserted) throw new SlotTakenError();
       return true;
     }).catch((error: unknown) => {
-      if (error instanceof SlotTakenError) return false;
-      throw error;
+      if (!(error instanceof SlotTakenError)) throw error;
+      refusals.add(SLOT_TAKEN);
+      return false;
     });
     if (booked) return { bookingId: input.booking.id, staffId, startsAt, endsAt };
   }
-  throw new SlotTakenError();
+  // For "anyone available", one person booked outweighs another's day off: the time is one the business offers.
+  throw new SlotTakenError(refusals.has(SLOT_TAKEN) ? SLOT_TAKEN : [...refusals][0]);
 }

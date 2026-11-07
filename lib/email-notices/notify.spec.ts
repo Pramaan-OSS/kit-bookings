@@ -16,7 +16,7 @@ import { createNoticesApi } from "./api";
 import { type Door, emailDoor, type Outcome, type Outgoing } from "./door";
 import { createNotifier, eventKey } from "./notify";
 import { render } from "./templates";
-import { OFF_NOTE } from "./words";
+import { OFF_NOTE, PENDING_NOTE } from "./words";
 
 const url = process.env.DATABASE_URL;
 const ORIGIN = process.env.APP_ORIGIN ?? "http://app.test";
@@ -252,16 +252,52 @@ describe.skipIf(!url)("email notices on Postgres", () => {
     expect(tasks.status).toBe(200);
   });
 
-  it("says email is off when the module is on but the platform has no sender yet", async () => {
-    const { door } = fakeDoor(() => ({ status: "not-sent", off: true, message: OFF_NOTE }));
+  it("says the platform has no sender yet, and keeps the test on offer until one is chosen", async () => {
+    let next: Outcome = { status: "not-sent", off: true, message: OFF_NOTE };
+    const { door } = fakeDoor(() => next);
     const api = apiWith(door);
     const owner = await ownerWithEmail();
     const test = await api.test(post(owner, { nonce: randomUUID() }));
     expect(await test.json()).toEqual({
       result: { status: "not-sent", off: true, note: OFF_NOTE },
     });
+    // The module is on, so the page is not "off": the last outcome says why, and the test button stays.
     const seen = await (await api.status(asked(owner))).json();
-    expect(seen).toMatchObject({ available: true, off: true, note: OFF_NOTE });
+    expect(seen).toMatchObject({ available: true, off: false });
+    expect(seen.note).toBeUndefined();
+    expect(seen.recent[0]).toMatchObject({ status: "not-sent", note: OFF_NOTE });
+    // The platform chooses a sender: the next test goes, and the page shows it, with no other email needed.
+    next = { status: "sent" };
+    const again = await api.test(post(owner, { nonce: randomUUID() }));
+    expect((await again.json()).result).toEqual({ status: "sent", off: false, note: "" });
+    const after = await (await api.status(asked(owner))).json();
+    expect(after).toMatchObject({ available: true, off: false });
+    expect(after.recent[0]).toMatchObject({ status: "sent", note: "" });
+  });
+
+  it("answers within its wait when the platform is slow, and records the outcome when it lands", async () => {
+    let land: (outcome: Outcome) => void = () => {};
+    const slow: Door = {
+      available: async () => true,
+      send: () => new Promise<Outcome>((resolve) => (land = resolve)),
+    };
+    const { notify } = createNotifier({ db: () => db, door: slow, waitMs: 50 });
+    const started = Date.now();
+    expect(await notify(notice("slow:1"))).toEqual({
+      status: "pending",
+      off: false,
+      note: PENDING_NOTE,
+    });
+    expect(Date.now() - started).toBeLessThan(2_000);
+    const row = () =>
+      db.query<{ status: string }>("SELECT status FROM app_email_notices WHERE event_key=$1", [
+        eventKey("added-to-group", "slow:1"),
+      ]);
+    expect((await row()).rows[0]?.status).toBe("pending");
+    // Asked again while it is on its way, it is not sent twice.
+    expect((await notify(notice("slow:1"))).status).toBe("skipped");
+    land({ status: "sent" });
+    await vi.waitFor(async () => expect((await row()).rows[0]?.status).toBe("sent"));
   });
 
   it("leaves no address in a log, an answer or a table, whatever goes wrong", async () => {
@@ -428,6 +464,16 @@ describe.skipIf(process.platform === "win32")("the email door client", () => {
         message: OFF_NOTE,
       });
     }
+    // A 403 for anything but an off error (a bad or rotated token) is an operator's fault, not "email is off".
+    answer = {
+      status: 403,
+      body: { error: "TOKEN_REJECTED", message: "The token was not accepted." },
+    };
+    expect(await emailDoor.send(message, key)).toEqual({
+      status: "not-sent",
+      off: false,
+      message: "The token was not accepted.",
+    });
     answer = { status: 429, body: { error: "EMAIL_LIMIT_REACHED", message: "Twenty an hour." } };
     expect(await emailDoor.send(message, key)).toEqual({
       status: "not-sent",

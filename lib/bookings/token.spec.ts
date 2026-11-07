@@ -1,6 +1,8 @@
 import { createHmac, randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { verifySchedule } from "./jobs";
+import { POST } from "../../app/api/jobs/reminders/handler";
+import { HttpError } from "./http";
+import { MAX_JOB_BYTES, runReminders, verifySchedule } from "./jobs";
 import { newManageNonce, readManageToken, signManageToken } from "./token";
 
 const SECRET = "a-session-secret-of-at-least-32-characters";
@@ -91,5 +93,41 @@ describe("the reminder job's signature check", () => {
     expect(verifySchedule(key, old, sign(key, old, body), body, now)).toBe(false);
     expect(verifySchedule(null, timestamp, sign(key, timestamp, body), body, now)).toBe(false);
     expect(verifySchedule(key, "soon", sign(key, "soon", body), body, now)).toBe(false);
+  });
+
+  it("stops reading an anonymous body past a few KB, before any signature is checked", async () => {
+    // A long body: a reader with no bound would pull all of it, then refuse it as unsigned.
+    let pulled = 0;
+    const long = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (++pulled > 1_024) controller.close();
+        else controller.enqueue(new Uint8Array(1_024));
+      },
+    });
+    const call = (payload: BodyInit) =>
+      runReminders(
+        new Request("http://app.test/api/jobs/reminders", {
+          method: "POST",
+          body: payload,
+          duplex: "half",
+        } as RequestInit),
+      );
+    const refused = await call(long).catch((error: unknown) => error);
+    expect(refused).toBeInstanceOf(HttpError);
+    expect((refused as HttpError).status).toBe(413);
+    expect(pulled * 1_024).toBeLessThanOrEqual(MAX_JOB_BYTES + 3 * 1_024);
+    const forbidden = { status: 403, value: { error: "Forbidden" } };
+    // A small unsigned call is read whole and refused as before, up to the last byte allowed.
+    expect(await call(body)).toEqual(forbidden);
+    expect(await call("x".repeat(MAX_JOB_BYTES))).toEqual(forbidden);
+    await expect(call("x".repeat(MAX_JOB_BYTES + 1))).rejects.toMatchObject({ status: 413 });
+    // The public route answers it as a 413, not as a failure.
+    const answer = await POST(
+      new Request("http://app.test/api/jobs/reminders", {
+        method: "POST",
+        body: "x".repeat(MAX_JOB_BYTES + 1),
+      }),
+    );
+    expect(answer.status).toBe(413);
   });
 });

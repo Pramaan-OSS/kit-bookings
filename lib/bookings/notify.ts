@@ -139,3 +139,27 @@ export async function deliver(message: Parameters<typeof sendEmail>[0]): Promise
     return { status: "unknown", note: outcome.message, retry: false };
   return { status: "not-sent", note: outcome.message, retry: outcome.retry };
 }
+
+/** How long a request waits for an email before it answers; the send carries on, and is recorded where it is kept. */
+export const EMAIL_WAIT_MS = 8_000;
+
+/** `deliver`, but a request that must answer soon waits `waitMs` at most, and then says the email may still arrive. */
+export function deliverWithin(
+  message: Parameters<typeof sendEmail>[0],
+  waitMs = EMAIL_WAIT_MS,
+): Promise<EmailRecord> {
+  return Promise.race([
+    deliver(message),
+    new Promise<EmailRecord>((resolve) => {
+      setTimeout(
+        () =>
+          resolve({
+            status: "unknown",
+            note: "The email service is slow, so it may still arrive.",
+            retry: false,
+          }),
+        waitMs,
+      ).unref?.();
+    }),
+  ]);
+}

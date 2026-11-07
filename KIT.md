@@ -42,7 +42,8 @@ One app for a salon, studio, appointment business or class timetable. Keep app a
 - lib/bookings/calendar.ts: fold calendar download lines at 75 UTF-8 octets.
 - lib/bookings/slots.ts and lib/time-slots/{slots,time}.ts: ported slot engine, zone conversion and display grouping.
 - lib/bookings/time.ts, token.ts, format.ts and http.ts: zone helpers, signed manage links, display words and bounded same-origin input.
-- lib/bookings/notify.ts and jobs.ts: confirmation, owner and reminder delivery through platform doors.
+- lib/bookings/notify.ts and jobs.ts: confirmation, owner and reminder delivery through platform doors; a request waits for an email at most EMAIL_WAIT_MS, and the reminders route reads at most MAX_JOB_BYTES before checking its signature.
+- lib/bookings/public.ts: public booking, throttled per client and per email from one client, so no one can lock an address out from elsewhere.
 - lib/roles/: ported deny-by-default guards and owner-assigned roles.
 - lib/admin-table/: ported entity list, scoped queries and spreadsheet-safe export.
 - lib/email-notices/: ported delivery status, duplicate prevention and platform door.
@@ -54,6 +55,7 @@ One app for a salon, studio, appointment business or class timetable. Keep app a
 - src/db/migrations/0140-holds-and-platform-owner.sql: Postgres holds and operator-owned unused historical platform mapping.
 - src/db/migrations/0150-class-places.sql: class capacities and per-member places.
 - src/db/migrations/0160-preparation-notes.sql: owner-managed preparation records.
+- src/db/migrations/0161-release-member.sql: deleting an account frees its class places.
 - scripts/migrate.mjs: explicit, transactional numbered migration runner; refuses changed or out-of-order applied files.
 - journeys/: platform checklists; scripts/walk.mjs runs them with headless Chromium on port 3306.
 - lib/test-database.ts: booking concurrency specs use TEST_DATABASE_URL, then KIT_CI_DATABASE_URL, then the platform's DATABASE_URL.
