@@ -136,9 +136,9 @@
   "adaptations": {
     "theme": "Local package fonts replace remote font fetching; diary components read copied tokens. CSS formatting follows the kit formatter; sourceHashes identify the unchanged upstream source.",
     "time-slots": "Pure availability and zone engines drive the visitor diary. Account-only routes and parallel resource tables replaced by the reference normalized service and staff schema; Postgres hold and class locking added.",
-    "roles": "Shared connection pool; deny-by-default guards and owner role grants retained.",
+    "roles": "Shared connection pool; deny-by-default guards and owner role grants retained; the roles screen points to the Staff page, where a Staff account is linked to a person.",
     "admin-table": "Preparation notes added; raw identifiers omitted from exports; plain signed numbers stay numbers in CSV.",
     "email-notices": "Shared connection pool; platform door and off-state status retained; test send bounded to 8 s with late outcome recorded; off read from the module only; a 403 is off only for an OFF_ERRORS code.",
-    "password-reset": "Only the password crypto helpers are used, extracted to lib/password.ts, retaining both formats and the four-derive cap. Sign-in atomically compares the old hash and invalidates sessions before creating a new session."
+    "password-reset": "Kit 0.3.0: no file from this block is shipped. Its password crypto helpers (lib/password.ts) were removed so lib/accounts.ts is the starter's exact bytes; the entry is kept to record where the earlier helpers came from."
   }
 }

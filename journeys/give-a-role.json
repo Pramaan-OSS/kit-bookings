@@ -41,7 +41,7 @@
           "expectText": "staff-member@example.test is now Staff."
         },
         {
-          "expectText": "Staff see nothing extra yet."
+          "expectText": "link them to their name on the Staff page"
         }
       ]
     }

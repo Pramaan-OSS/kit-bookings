@@ -15,17 +15,19 @@ One app for a salon, studio, appointment business or class timetable. Keep app a
 - app/owner/page.tsx: today's overview and setup status.
 - app/owner/bookings/screen.tsx: diary list and week view; move or cancel.
 - app/owner/services/screen.tsx: service names, lengths, prices and buffers.
-- app/owner/staff/screen.tsx: people and the services they offer.
+- app/owner/staff/screen.tsx: people, the services they offer and the Staff account each one signs in with.
+- app/staff/page.tsx and staff-day.tsx: a linked Staff account's own day, one day at a time.
 - app/owner/hours/screen.tsx: weekly hours and days off.
 - app/owner/settings/screen.tsx: business details, zone, rules and owner signin settings.
 - app/owner/classes/screen.tsx: owner adds classes with bounded capacity; class places have a separate timetable from individual appointments.
-- app/owner/roles/screen.tsx: owner labels existing members as staff; this grants no extra access.
+- app/owner/roles/screen.tsx: owner labels existing members as staff; the label alone opens nothing.
 - app/owner/email/screen.tsx: email status and notices; an off module sends nothing.
 - app/records/page.tsx and app/records/[entity]/page.tsx: search, edit, filter and export preparation notes.
 - app/api/account/[action]/route.ts: unchanged starter account handler and owner-pass entry.
 - app/api/health/route.ts: starter health response.
 - app/api/booking/{catalog,slots,hold,book,manage,calendar}/handler.ts: visitor routes; holds and booking writes use the same staff row lock.
 - app/api/me/bookings/handler.ts: customer bookings, scoped to the authenticated account.
+- app/api/staff/day/handler.ts: a linked Staff account's own day (lib/bookings/staff.ts).
 - app/api/owner/{overview,bookings,services,staff,hours,settings}/handler.ts: owner-only diary changes.
 - app/api/classes/handler.ts: public class list, authenticated member places and owner-only class creation.
 - app/api/roles/handler.ts: owner-only role grants.
@@ -56,6 +58,7 @@ One app for a salon, studio, appointment business or class timetable. Keep app a
 - src/db/migrations/0150-class-places.sql: class capacities and per-member places.
 - src/db/migrations/0160-preparation-notes.sql: owner-managed preparation records.
 - src/db/migrations/0161-release-member.sql: deleting an account frees its class places.
+- src/db/migrations/0170-staff-sign-in.sql: staff.user_id links a person to one account; releasing the account unlinks it.
 - scripts/migrate.mjs: explicit, transactional numbered migration runner; refuses changed or out-of-order applied files.
 - journeys/: platform checklists; scripts/walk.mjs runs them with headless Chromium on port 3306.
 - lib/test-database.ts: booking concurrency specs use TEST_DATABASE_URL, then KIT_CI_DATABASE_URL, then the platform's DATABASE_URL.
@@ -74,6 +77,8 @@ Create app/about/page.tsx and app/about/pramaan.feature.json with routes and a p
 
 The account's base role is app_users.role: member at public signup, owner only through the owner pass. Additional owner grants live in app_role_members. Add a role name to ASSIGNABLE_ROLES in lib/roles/guard.ts and the manifest. assignRole accepts only listed roles and cannot change the owner. Every private handler names allowed roles explicitly; an empty list denies everyone. Staff cannot access the owner diary by default.
 
+Staff sign-in: the owner marks an account as Staff and links it to a person on the Staff page (staff.user_id). lib/bookings/staff.ts checks both on every request and gives that account its own day: time, service and customer name only. Widen what staff see there, never in the owner routes.
+
 ## Journeys that ship working
 
 - book-a-slot: choose a service and time, acquire a five-minute hold, confirm and download a calendar file.
@@ -83,7 +88,8 @@ The account's base role is app_users.role: member at public signup, owner only t
 - set-up-services: owner adds a service and visitors can choose it.
 - set-hours: owner changes hours and adds a closed day.
 - run-the-diary: owner names the business and opens the weekly diary.
-- give-a-role: owner marks a member as staff; staff see nothing extra yet.
+- give-a-role: owner marks a member as staff; the label alone opens nothing.
+- staff-day: owner links a Staff account to a person; they sign in and see their own day, and no owner screen.
 - manage-records: owner searches, adds, edits and exports preparation notes.
 - see-email-status: owner sees that email is off; no sending is claimed.
 - class-places: owner creates a class, member books and cancels their own place; capacity is locked in Postgres.

@@ -1,11 +1,11 @@
 "use client";
 // Who people book with. There is always at least one; a solo business keeps one and gives it its own name.
 // With two or more, the booking page asks visitors who they'd like, or "anyone available".
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { KeyRound, Pencil, Plus, Trash2 } from "lucide-react";
 import { type CSSProperties, type FormEvent, useCallback, useEffect, useState } from "react";
 import { STAFF_COLORS } from "../../../lib/bookings/format";
 import { messageOf } from "../../parts/fetch";
-import { Alert, Badge, Button, Dialog, Field, Skeleton, Switch } from "../../ui";
+import { Alert, Badge, Button, Dialog, Field, Select, Skeleton, Switch } from "../../ui";
 import { OwnerHeading, ownerCall, useOwner } from "../owner-shell";
 
 type Person = {
@@ -15,9 +15,11 @@ type Person = {
   color: string;
   active: boolean;
   serviceIds: string[];
+  signIn: { email: string; staff: boolean } | null;
 };
+type StaffAccount = { id: string; email: string };
 type ServiceOption = { id: string; name: string; length: string; active: boolean };
-type Draft = Omit<Person, "id"> & { id: string | null };
+type Draft = Omit<Person, "id" | "signIn"> & { id: string | null };
 
 const ink = (color: string) => ({ "--ink": `var(--staff-${color})` }) as CSSProperties;
 
@@ -27,18 +29,23 @@ export default function OwnerStaff() {
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [removing, setRemoving] = useState<Person | null>(null);
+  const [accounts, setAccounts] = useState<StaffAccount[]>([]);
+  const [linking, setLinking] = useState<Person | null>(null);
+  const [chosen, setChosen] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const result = await ownerCall<{ staff: Person[]; services: ServiceOption[] }>(
-        owner,
-        "/api/owner/staff",
-      );
+      const result = await ownerCall<{
+        staff: Person[];
+        services: ServiceOption[];
+        accounts: StaffAccount[];
+      }>(owner, "/api/owner/staff");
       setPeople(result.staff);
       setServices(result.services);
+      setAccounts(result.accounts);
     } catch (failure) {
       setError(messageOf(failure));
     }
@@ -56,6 +63,35 @@ export default function OwnerStaff() {
       await ownerCall(owner, "/api/owner/staff", { action: "save", person: draft });
       setNotice(`Saved ${draft.name.trim()}.`);
       setDraft(null);
+      await load();
+    } catch (failure) {
+      setError(messageOf(failure));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function openLink(person: Person) {
+    setError("");
+    setChosen(
+      accounts.find((account) => account.email === person.signIn?.email)?.id ??
+        accounts[0]?.id ??
+        "",
+    );
+    setLinking(person);
+  }
+
+  async function link(person: Person, userId: string | null) {
+    setBusy(true);
+    setError("");
+    try {
+      await ownerCall(owner, "/api/owner/staff", { action: "link", id: person.id, userId });
+      setNotice(
+        userId
+          ? `${person.name} can now sign in and see their own day.`
+          : `${person.name} no longer signs in.`,
+      );
+      setLinking(null);
       await load();
     } catch (failure) {
       setError(messageOf(failure));
@@ -156,8 +192,18 @@ export default function OwnerStaff() {
                         .map((service) => service.name)
                         .join(", ")}
                 </p>
+                <p className="mt-1 text-sm text-muted">
+                  {!person.signIn
+                    ? "Does not sign in"
+                    : person.signIn.staff
+                      ? `Signs in as ${person.signIn.email}`
+                      : `Linked to ${person.signIn.email}, who is no longer marked as Staff, so they see nothing`}
+                </p>
               </div>
               <div className="flex gap-2">
+                <Button aria-label={`Sign-in for ${person.name}`} onClick={() => openLink(person)}>
+                  <KeyRound aria-hidden="true" className="h-4 w-4" />
+                </Button>
                 <Button
                   aria-label={`Edit ${person.name}`}
                   onClick={() => {
@@ -278,6 +324,59 @@ export default function OwnerStaff() {
               </Button>
             </div>
           </form>
+        )}
+      </Dialog>
+
+      <Dialog
+        open={linking !== null}
+        onClose={() => setLinking(null)}
+        title={`Sign-in for ${linking?.name ?? "this person"}`}
+      >
+        {linking && (
+          <div className="grid gap-5">
+            <p className="text-muted">
+              They sign in with this account and see their own bookings, a day at a time: the time,
+              the service and the customer's name. Nothing else in the owner area opens for them.
+            </p>
+            {accounts.length === 0 ? (
+              <p className="text-muted">
+                No account is marked as Staff yet. Ask them to create an account on the app, then
+                mark it as Staff under Roles.
+              </p>
+            ) : (
+              <Select
+                label="Account"
+                id="staff-account"
+                value={chosen}
+                disabled={busy}
+                onChange={(event) => setChosen(event.target.value)}
+              >
+                {accounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.email}
+                  </option>
+                ))}
+              </Select>
+            )}
+            {error && <Alert title={error} tone="error" />}
+            <div className="flex flex-wrap justify-end gap-3">
+              {linking.signIn && (
+                <Button disabled={busy} onClick={() => void link(linking, null)}>
+                  Stop their sign-in
+                </Button>
+              )}
+              <Button onClick={() => setLinking(null)}>Cancel</Button>
+              {accounts.length > 0 && (
+                <Button
+                  variant="primary"
+                  disabled={busy || chosen === ""}
+                  onClick={() => void link(linking, chosen)}
+                >
+                  {busy ? "Saving…" : "Link account"}
+                </Button>
+              )}
+            </div>
+          </div>
         )}
       </Dialog>
 

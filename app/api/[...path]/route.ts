@@ -17,6 +17,7 @@ import * as handler16 from "../owner/staff/handler";
 import * as handler20 from "../records/[entity]/export/handler";
 import * as handler19 from "../records/[entity]/handler";
 import * as handler2 from "../roles/handler";
+import * as handler21 from "../staff/day/handler";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 const routes: Record<string, unknown> = {
@@ -37,6 +38,7 @@ const routes: Record<string, unknown> = {
   "owner/staff": handler16,
   "owner/overview": handler17,
   "owner/services": handler18,
+  "staff/day": handler21,
 };
 type Handler = (
   request: Request,

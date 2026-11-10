@@ -21,7 +21,12 @@ type Saved = {
   status: "confirmed" | "cancelled" | "rescheduled";
   manageUrl: string;
 };
-type Mine = { user: SessionUser; business: { name: string }; bookings: Saved[] };
+type Mine = {
+  user: SessionUser;
+  staff?: boolean;
+  business: { name: string };
+  bookings: Saved[];
+};
 
 export default function AccountPage() {
   const router = useRouter();
@@ -188,6 +193,11 @@ export default function AccountPage() {
                 <h1 className="font-display text-4xl sm:text-5xl">Your bookings</h1>
               </div>
               <div className="flex gap-3">
+                {mine?.staff && (
+                  <Link href="/staff" className="button-primary inline-flex min-h-11 items-center">
+                    Your working day
+                  </Link>
+                )}
                 <Link href="/" className="button-primary inline-flex min-h-11 items-center">
                   Book a time
                 </Link>

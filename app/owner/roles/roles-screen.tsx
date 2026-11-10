@@ -75,7 +75,10 @@ export function RolesScreen({ ownerId }: { ownerId: string }) {
   if (accounts === null) return <p className="text-muted">One moment…</p>;
   return (
     <>
-      <p className="text-muted">Mark a member as staff. Staff see nothing extra yet.</p>
+      <p className="text-muted">
+        Mark a member as staff. To let them see their own day, link them to their name on the Staff
+        page.
+      </p>
       <form
         className="flex flex-wrap items-end gap-3"
         onSubmit={(event) => {

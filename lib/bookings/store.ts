@@ -695,3 +695,90 @@ export async function ownerEmail(db: Db) {
   );
   return (rows[0]?.email as string | undefined) ?? null;
 }
+
+// ---- Staff sign-ins ------------------------------------------------------------------------------------------------
+
+/**
+ * The account each linked person signs in with, by person, for the owner's staff screen: its email, and whether it is
+ * still marked as Staff (without the role, a linked account sees nothing).
+ */
+export async function staffSignIns(db: Db) {
+  const { rows } = await db.query(
+    `SELECT st.id, u.email, m.user_id IS NOT NULL AS staff FROM staff st JOIN app_users u ON u.id = st.user_id
+    LEFT JOIN app_role_members m ON m.user_id = u.id AND m.role = 'staff'`,
+  );
+  return new Map(
+    rows.map((row) => [
+      row.id as string,
+      { email: row.email as string, staff: row.staff as boolean },
+    ]),
+  );
+}
+
+/** The accounts the owner marked as Staff (lib/roles), which the staff screen may link to a person. */
+export async function staffAccounts(db: Db) {
+  const { rows } = await db.query(
+    `SELECT u.id, u.email FROM app_users u JOIN app_role_members m ON m.user_id = u.id
+    WHERE m.role = 'staff' AND u.role <> 'owner' ORDER BY u.email, u.id LIMIT 200`,
+  );
+  return rows.map((row) => ({ id: row.id as string, email: row.email as string }));
+}
+
+/**
+ * Links a person to the account they sign in with, or unlinks them (null). Only an account marked as Staff, and one
+ * account is one person (the unique key on staff.user_id).
+ */
+export async function linkStaff(
+  db: Db,
+  staffId: string,
+  userId: string | null,
+): Promise<"saved" | "no-person" | "not-staff" | "taken"> {
+  if (userId) {
+    const { rows } = await db.query(
+      `SELECT 1 FROM app_users u JOIN app_role_members m ON m.user_id = u.id
+      WHERE u.id = $1 AND m.role = 'staff' AND u.role <> 'owner'`,
+      [userId],
+    );
+    if (!rows[0]) return "not-staff";
+  }
+  try {
+    const { rowCount } = await db.query("UPDATE staff SET user_id = $2 WHERE id = $1", [
+      staffId,
+      userId,
+    ]);
+    return rowCount ? "saved" : "no-person";
+  } catch (error) {
+    const code = (error as { code?: string }).code;
+    if (code === "23505") return "taken";
+    // The account was released between the check and the update.
+    if (code === "23503") return "not-staff";
+    throw error;
+  }
+}
+
+/** The person an account signs in as, when the owner linked one. */
+export async function staffOfUser(db: Db, userId: string) {
+  const { rows } = await db.query("SELECT id, name FROM staff WHERE user_id = $1", [userId]);
+  return rows[0] ? { id: rows[0].id as string, name: rows[0].name as string } : null;
+}
+
+/**
+ * One person's confirmed bookings starting in [from, to): the time, the service and the customer's name, nothing
+ * else. Staff never see a customer's email or phone, so this query never reads them.
+ */
+export async function bookingsOfStaff(db: Db, staffId: string, from: number, to: number) {
+  const { rows } = await db.query(
+    `SELECT starts_at, ends_at, service_name, customer_name FROM bookings
+    WHERE staff_id = $1 AND status = 'confirmed'
+      AND starts_at >= to_timestamp($2::double precision / 1000)
+      AND starts_at < to_timestamp($3::double precision / 1000)
+    ORDER BY starts_at LIMIT 200`,
+    [staffId, from, to],
+  );
+  return rows.map((row) => ({
+    startsAt: new Date(row.starts_at as string).toISOString(),
+    endsAt: new Date(row.ends_at as string).toISOString(),
+    serviceName: row.service_name as string,
+    customerName: row.customer_name as string,
+  }));
+}

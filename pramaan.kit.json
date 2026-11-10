@@ -1,6 +1,6 @@
 {
   "id": "bookings",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "title": "Bookings",
   "summary": "Appointments and class places for salons and studios. Visitors book, move or cancel; the owner manages services, staff, hours and capacity.",
   "category": "scheduling",
@@ -79,7 +79,7 @@
       "route": "/owner/staff",
       "file": "app/owner/staff/screen.tsx",
       "audience": "owner",
-      "summary": "Who people book with, their colour and the services they offer."
+      "summary": "Who people book with, their colour, the services they offer and the Staff account each signs in with."
     },
     {
       "route": "/owner/hours",
@@ -109,7 +109,13 @@
       "route": "/owner/roles",
       "file": "app/owner/roles/screen.tsx",
       "audience": "owner",
-      "summary": "Mark a member as staff; staff see nothing extra yet."
+      "summary": "Mark a member as staff, then link them to their name on the Staff page so they see their own day."
+    },
+    {
+      "route": "/staff",
+      "file": "app/staff/page.tsx",
+      "audience": "staff",
+      "summary": "A linked staff member's own bookings, a day at a time: time, service and customer name."
     },
     {
       "route": "/owner/email",
@@ -139,7 +145,7 @@
     },
     "staff": {
       "source": "added-by-owner",
-      "summary": "A member marked as staff by the owner; staff see nothing extra yet."
+      "summary": "A member marked as staff by the owner; once linked to a person on the Staff page, sees that person's own day (customer names only, no emails or phone numbers)."
     }
   },
   "journeys": [
@@ -223,9 +229,16 @@
     {
       "id": "give-a-role",
       "role": "owner",
-      "summary": "Marks a member as staff (staff see nothing extra yet).",
+      "summary": "Marks a member as staff; the label alone opens nothing.",
       "status": "ships-working",
       "checklist": "journeys/give-a-role.json"
+    },
+    {
+      "id": "staff-day",
+      "role": "staff",
+      "summary": "The owner links a staff account to a person; they sign in, see only their own day and no owner screen.",
+      "status": "ships-working",
+      "checklist": "journeys/staff-day.json"
     },
     {
       "id": "manage-records",
@@ -263,7 +276,7 @@
     "Other languages: the app is in English",
     "Classes have a separate timetable from staff appointments; no recurring classes or group checkout.",
     "Platform organisation accounts and team details are not included.",
-    "Staff is a label only; staff see nothing extra yet.",
+    "Staff see only their own day's bookings, with customer names: they cannot move, cancel or add bookings, or see customers' emails or phone numbers.",
     "Classes cannot be edited or cancelled after they are added, and the owner cannot see who booked."
   ],
   "protectedPaths": [

@@ -1,0 +1,101 @@
+{
+  "items": [
+    {
+      "id": "staff-day",
+      "label": "Link a staff member's sign-in; they see their own day and no owner screen",
+      "steps": [
+        {
+          "enterAs": "visitor"
+        },
+        {
+          "goto": "/account"
+        },
+        {
+          "fill": "Email",
+          "value": "stylist@example.test"
+        },
+        {
+          "fill": "Password",
+          "value": "a long stylist password 123"
+        },
+        {
+          "click": "Create account"
+        },
+        {
+          "expectHeading": "Your bookings"
+        },
+        {
+          "expectAbsent": "Your working day"
+        },
+        {
+          "enterAs": "owner"
+        },
+        {
+          "goto": "/owner/roles"
+        },
+        {
+          "select": "Role for stylist@example.test",
+          "option": "Staff"
+        },
+        {
+          "expectText": "stylist@example.test is now Staff."
+        },
+        {
+          "goto": "/owner/staff"
+        },
+        {
+          "click": "Sign-in for Our team"
+        },
+        {
+          "select": "Account",
+          "option": "stylist@example.test"
+        },
+        {
+          "click": "Link account"
+        },
+        {
+          "expectText": "Our team can now sign in and see their own day."
+        },
+        {
+          "expectText": "Signs in as stylist@example.test"
+        },
+        {
+          "enterAs": "visitor"
+        },
+        {
+          "goto": "/account"
+        },
+        {
+          "click": "Sign in"
+        },
+        {
+          "fill": "Email",
+          "value": "stylist@example.test"
+        },
+        {
+          "fill": "Password",
+          "value": "a long stylist password 123"
+        },
+        {
+          "click": "Sign in"
+        },
+        {
+          "click": "Your working day"
+        },
+        {
+          "expectHeading": "Your day"
+        },
+        {
+          "expectText": "Times are in the business's time zone."
+        },
+        {
+          "goto": "/owner/bookings"
+        },
+        {
+          "expectHeading": "This area is for the owner"
+        }
+      ]
+    }
+  ],
+  "names": {}
+}

@@ -75,6 +75,7 @@ describe("kit review boundaries", () => {
       "/owner/roles",
       "/owner/email",
       "/records",
+      "/staff",
     ]) {
       const e = manifest.entryPoints.find((e: { route: string }) => e.route === route);
       expect(e.summary.length).toBeGreaterThan(40);
@@ -89,10 +90,16 @@ describe("kit review boundaries", () => {
       "Classes cannot be edited or cancelled after they are added, and the owner cannot see who booked.",
     );
   });
-  it("describes staff as a label without extra access", async () => {
+  it("describes the staff label as opening nothing alone, and the staff day as the extension point", async () => {
     expect(manifest.journeys.find((j: { id: string }) => j.id === "give-a-role").summary).toContain(
-      "staff see nothing extra yet",
+      "the label alone opens nothing",
     );
+    expect(read("KIT.md")).not.toContain("staff see nothing extra yet");
+    expect(read("KIT.md")).toContain("lib/bookings/staff.ts checks both on every request");
+    expect(manifest.journeys.find((j: { id: string }) => j.id === "staff-day")).toMatchObject({
+      role: "staff",
+      status: "ships-working",
+    });
     const guard = createRoleGuard(
       { query: async () => ({ rows: [{ role: "staff" }] }) } as never,
       async () => ({ id: "member", email: null, role: "member" }),

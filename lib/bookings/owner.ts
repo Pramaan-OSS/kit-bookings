@@ -14,6 +14,7 @@ import {
   cancelBooking,
   getBusiness,
   latestBookings,
+  linkStaff,
   listDaysOff,
   listHours,
   listServices,
@@ -26,6 +27,8 @@ import {
   saveBusiness,
   saveService,
   saveStaff,
+  staffAccounts,
+  staffSignIns,
   teamSize,
 } from "./store";
 import { addDays, canonicalZone, isLocalDate, localDateOf, toInstant, weekdayOf } from "./time";
@@ -110,9 +113,16 @@ export async function changeServices(request: Request) {
 export async function staff(request: Request) {
   await requireOwner(request);
   const db = database();
-  const [people, list] = await Promise.all([listStaff(db), listServices(db)]);
+  const [people, list, signIns, accounts] = await Promise.all([
+    listStaff(db),
+    listServices(db),
+    staffSignIns(db),
+    staffAccounts(db),
+  ]);
   return {
-    staff: people,
+    staff: people.map((person) => ({ ...person, signIn: signIns.get(person.id) ?? null })),
+    // The accounts marked as Staff, which a person can be linked to.
+    accounts,
     services: list.map((service) => ({
       id: service.id,
       name: service.name,
@@ -126,6 +136,16 @@ export async function changeStaff(request: Request) {
   await requireOwner(request);
   const body = await readBody(request);
   const pool = database();
+  if (body.action === "link") {
+    const userId = body.userId === null ? null : uuid(body.userId, "staff account");
+    const result = await linkStaff(pool, uuid(body.id, "person"), userId);
+    if (result === "no-person") throw new HttpError(404, "That person is already gone.");
+    if (result === "not-staff")
+      throw new HttpError(400, "Mark that account as Staff under Roles first.");
+    if (result === "taken")
+      throw new HttpError(409, "That account already signs in as someone else here.");
+    return { linked: userId !== null };
+  }
   if (body.action === "remove") {
     const result = await removeStaff(pool, uuid(body.id, "person"));
     if (!result) throw new HttpError(404, "That person is already gone.");
