@@ -4,10 +4,9 @@ One app for a salon, studio, appointment business or class timetable. Keep app a
 
 ## Where things live
 
-- app/owner/[...section]/page.tsx dispatches owner screens; each former page listed below now lives in screen.tsx in that same folder.
-- app/api/[...path]/route.ts dispatches the custom routes below; each handler lives in handler.ts in the listed folder. This bounds build workers without changing public addresses or access checks.
+- app/owner/[...section]/page.tsx and app/api/[...path]/route.ts dispatch to the screen.tsx and handler.ts files below; addresses and access checks are unchanged.
 
-- app/page.tsx: visitors choose a service, a person and a time; the server holds it for five minutes before details are entered; an expired hold falls back to a fresh availability check.
+- app/page.tsx: visitors choose a service, a person and a time; the server holds it for five minutes while details are entered; an expired hold rechecks availability.
 - app/manage/page.tsx and manage-booking.tsx: signed confirmation links, calendar download, move, cancel and save to an account.
 - app/account/page.tsx: customer signup, signin, signout and their own bookings.
 - app/classes/page.tsx and class-screen.tsx: class places, scoped to the signed-in member; times interpreted and shown in the business time zone.
@@ -16,18 +15,16 @@ One app for a salon, studio, appointment business or class timetable. Keep app a
 - app/owner/bookings/screen.tsx: diary list and week view; move or cancel.
 - app/owner/services/screen.tsx: service names, lengths, prices and buffers.
 - app/owner/staff/screen.tsx: people, the services they offer and the Staff account each one signs in with.
-- app/staff/page.tsx and staff-day.tsx: a linked Staff account's own day, one day at a time.
+- app/staff/page.tsx, staff-day.tsx and app/api/staff/day/handler.ts: a linked Staff account's own day, one day at a time (lib/bookings/staff.ts).
 - app/owner/hours/screen.tsx: weekly hours and days off.
 - app/owner/settings/screen.tsx: business details, zone, rules and owner signin settings.
-- app/owner/classes/screen.tsx: owner adds classes with bounded capacity; class places have a separate timetable from individual appointments.
+- app/owner/classes/screen.tsx: owner adds classes with bounded capacity, timetabled apart from appointments.
 - app/owner/roles/screen.tsx: owner labels existing members as staff; the label alone opens nothing.
 - app/owner/email/screen.tsx: email status and notices; an off module sends nothing.
 - app/records/page.tsx and app/records/[entity]/page.tsx: search, edit, filter and export preparation notes.
-- app/api/account/[action]/route.ts: unchanged starter account handler and owner-pass entry.
-- app/api/health/route.ts: starter health response.
+- app/api/account/[action]/route.ts and app/api/health/route.ts: unchanged starter account, owner-pass and health handlers.
 - app/api/booking/{catalog,slots,hold,book,manage,calendar}/handler.ts: visitor routes; holds and booking writes use the same staff row lock.
 - app/api/me/bookings/handler.ts: customer bookings, scoped to the authenticated account.
-- app/api/staff/day/handler.ts: a linked Staff account's own day (lib/bookings/staff.ts).
 - app/api/owner/{overview,bookings,services,staff,hours,settings}/handler.ts: owner-only diary changes.
 - app/api/classes/handler.ts: public class list, authenticated member places and owner-only class creation.
 - app/api/roles/handler.ts: owner-only role grants.
@@ -36,7 +33,6 @@ One app for a salon, studio, appointment business or class timetable. Keep app a
 - app/api/jobs/reminders/handler.ts: signed platform job requests only.
 - lib/accounts.ts: starter accounts, session revocation, owner and owner-pass verification; kept byte for byte.
 - lib/runtime.ts: one Postgres pool shared by all routes, three connections by default, capped at six.
-- lib/bookings/public.ts, owner.ts and customer.ts: visitor, owner and member actions respectively.
 - lib/bookings/store.ts: parameterised SQL and transactions; lock staff before reading availability or inserting.
 - lib/bookings/reserve.ts: slot protocol shared by holds and confirmations; moving locks the old booking first.
 - lib/bookings/holds.ts: random bearer hold tokens, hashes stored in Postgres, expiry, atomic replacement and consumption.
@@ -45,7 +41,7 @@ One app for a salon, studio, appointment business or class timetable. Keep app a
 - lib/bookings/slots.ts and lib/time-slots/{slots,time}.ts: ported slot engine, zone conversion and display grouping.
 - lib/bookings/time.ts, token.ts, format.ts and http.ts: zone helpers, signed manage links, display words and bounded same-origin input.
 - lib/bookings/notify.ts and jobs.ts: confirmation, owner and reminder delivery through platform doors; a request waits for an email at most EMAIL_WAIT_MS, and the reminders route reads at most MAX_JOB_BYTES before checking its signature.
-- lib/bookings/public.ts: public booking, throttled per client and per email from one client, so no one can lock an address out from elsewhere.
+- lib/bookings/public.ts, owner.ts and customer.ts: visitor, owner and member actions; public booking is throttled per client and per email from one client, so no one can lock an address out from elsewhere.
 - lib/roles/: ported deny-by-default guards and owner-assigned roles.
 - lib/admin-table/: ported entity list, scoped queries and spreadsheet-safe export.
 - lib/email-notices/: ported delivery status, duplicate prevention and platform door.
@@ -54,12 +50,10 @@ One app for a salon, studio, appointment business or class timetable. Keep app a
 - src/db/migrations/0001-accounts-and-tasks.sql and 0002-app-owner.sql: starter bytes, never edit.
 - src/db/migrations/0100-bookings.sql and 0101-starting-diary.sql: diary tables and initial services, staff and hours.
 - src/db/migrations/0120-roles.sql and 0130-email-notices.sql: ported roles and notice history.
-- src/db/migrations/0140-holds-and-platform-owner.sql: Postgres holds and operator-owned unused historical platform mapping.
-- src/db/migrations/0150-class-places.sql: class capacities and per-member places.
-- src/db/migrations/0160-preparation-notes.sql: owner-managed preparation records.
-- src/db/migrations/0161-release-member.sql: deleting an account frees its class places.
+- src/db/migrations/0140-holds-and-platform-owner.sql: Postgres holds and an unused historical platform mapping.
+- src/db/migrations/0150-class-places.sql, 0160-preparation-notes.sql and 0161-release-member.sql: class places, preparation records, and freeing places when an account is deleted.
 - src/db/migrations/0170-staff-sign-in.sql: staff.user_id links a person to one account; releasing the account unlinks it.
-- scripts/migrate.mjs: explicit, transactional numbered migration runner; refuses changed or out-of-order applied files.
+- scripts/migrate.mjs: transactional numbered migrations; refuses changed or out-of-order applied files.
 - journeys/: platform checklists; scripts/walk.mjs runs them with headless Chromium on port 3306.
 - lib/test-database.ts: booking concurrency specs use TEST_DATABASE_URL, then KIT_CI_DATABASE_URL, then the platform's DATABASE_URL.
 - scripts/assert-tests.mjs: reject skipped tests or unexecuted Postgres race suites from the JSON test report.
