@@ -5,6 +5,7 @@
       "label": "A customer makes an account and sees their bookings, none yet",
       "purpose": "sign-up",
       "steps": [
+        { "enterAs": "member" },
         { "goto": "/account" },
         { "expectHeading": "Create your account" },
         { "fill": "Email", "value": "sam@example.com" },
@@ -18,6 +19,7 @@
       "id": "customer-sees-their-booking",
       "label": "A signed-in customer books, and the booking is in their account",
       "steps": [
+        { "enterAs": "member" },
         { "goto": "/account" },
         { "fill": "Email", "value": "kim@example.com" },
         { "fill": "Password", "value": "another long password 99" },
