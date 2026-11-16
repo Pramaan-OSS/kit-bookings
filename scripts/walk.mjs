@@ -1,6 +1,13 @@
 import { createHmac, randomBytes } from "node:crypto";
 import { readdir, readFile, writeFile } from "node:fs/promises";
-import { chromium, expect } from "@playwright/test";
+import { pathToFileURL } from "node:url";
+
+// The kit carries the starter's package.json, which has no browser tools: point WALK_BROWSER_MODULE at an installed
+// @playwright/test (its index.mjs) to run this walk.
+const browserModule = process.env.WALK_BROWSER_MODULE;
+const { chromium, expect } = await import(
+  browserModule ? pathToFileURL(browserModule).href : "@playwright/test"
+);
 
 const config = JSON.parse(await readFile(".evidence/runtime.json", "utf8"));
 const origin = config.origin;
