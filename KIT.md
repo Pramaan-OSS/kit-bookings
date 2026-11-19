@@ -4,6 +4,8 @@ One app for a salon, studio, appointment business or class timetable. Keep app a
 
 ## Where things live
 
+- app/layout.tsx: platform-owned. It loads the theme and the fonts and wraps every page in the shell; don't edit it.
+- app/shell.tsx: the app's own page frame. Page headers live in app/parts/site-header.tsx and app/owner/owner-shell.tsx.
 - app/owner/[...section]/page.tsx and app/api/[...path]/route.ts dispatch to the screen.tsx and handler.ts files below; addresses and access checks are unchanged.
 
 - app/page.tsx: visitors choose a service, a person and a time; the server holds it for five minutes while details are entered; an expired hold rechecks availability.
