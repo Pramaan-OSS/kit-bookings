@@ -8,7 +8,7 @@
         { "click": "First consultation" },
         { "click": "Next available time" },
         { "fill": "Your name", "value": "Mary Somerville" },
-        { "fill": "Email", "value": "mary@example.com" },
+        { "fill": "Email", "value": "delivered+bookings-mary@resend.dev" },
         { "fill": "Phone", "value": "+44 131 496 0000" },
         { "click": "Confirm booking" },
         { "expectHeading": "You're booked" },

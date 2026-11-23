@@ -12,7 +12,7 @@
         },
         {
           "fill": "Email",
-          "value": "staff-member@example.test"
+          "value": "delivered+bookings-staff-member@resend.dev"
         },
         {
           "fill": "Password",
@@ -34,11 +34,11 @@
           "expectHeading": "Roles"
         },
         {
-          "select": "Role for staff-member@example.test",
+          "select": "Role for delivered+bookings-staff-member@resend.dev",
           "option": "Staff"
         },
         {
-          "expectText": "staff-member@example.test is now Staff."
+          "expectText": "delivered+bookings-staff-member@resend.dev is now Staff."
         },
         {
           "expectText": "link them to their name on the Staff page"

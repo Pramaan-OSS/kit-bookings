@@ -12,7 +12,7 @@
         },
         {
           "fill": "Email",
-          "value": "stylist@example.test"
+          "value": "delivered+bookings-stylist@resend.dev"
         },
         {
           "fill": "Password",
@@ -34,11 +34,11 @@
           "goto": "/owner/roles"
         },
         {
-          "select": "Role for stylist@example.test",
+          "select": "Role for delivered+bookings-stylist@resend.dev",
           "option": "Staff"
         },
         {
-          "expectText": "stylist@example.test is now Staff."
+          "expectText": "delivered+bookings-stylist@resend.dev is now Staff."
         },
         {
           "goto": "/owner/staff"
@@ -48,7 +48,7 @@
         },
         {
           "select": "Account",
-          "option": "stylist@example.test"
+          "option": "delivered+bookings-stylist@resend.dev"
         },
         {
           "click": "Link account"
@@ -57,7 +57,7 @@
           "expectText": "Our team can now sign in and see their own day."
         },
         {
-          "expectText": "Signs in as stylist@example.test"
+          "expectText": "Signs in as delivered+bookings-stylist@resend.dev"
         },
         {
           "enterAs": "staff"
@@ -70,7 +70,7 @@
         },
         {
           "fill": "Email",
-          "value": "stylist@example.test"
+          "value": "delivered+bookings-stylist@resend.dev"
         },
         {
           "fill": "Password",

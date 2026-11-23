@@ -8,7 +8,7 @@
         { "click": "Quick follow-up" },
         { "click": "Next available time" },
         { "fill": "Your name", "value": "Alan Turing" },
-        { "fill": "Email", "value": "alan@example.com" },
+        { "fill": "Email", "value": "delivered+bookings-alan@resend.dev" },
         { "fill": "Phone", "value": "+44 161 496 0000" },
         { "click": "Confirm booking" },
         { "expectHeading": "You're booked" },
