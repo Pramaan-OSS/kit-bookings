@@ -127,7 +127,7 @@ export function createNotifier({
         const note = outcome.status === "sent" ? "" : outcome.message;
         try {
           await db().query(
-            "UPDATE app_email_notices SET status=$2,off=$3,note=$4,updated_at=now() WHERE event_key=$1",
+            "UPDATE app_email_notices SET status=$2,off=$3,note=$4,updated_at=clock_timestamp() WHERE event_key=$1",
             [key, status, off, note],
           );
         } catch {

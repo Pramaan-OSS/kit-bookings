@@ -109,10 +109,11 @@ describe.skipIf(!url)("bookings on Postgres", () => {
           manageNonce: newManageNonce(),
         },
       });
-    // Overlapping starts within the booking's hour and its 15 minutes after, then the same start twenty times.
+    // Overlapping starts, then the same start twenty times. Each booking holds 75 minutes (60 plus 15 after), so
+    // starts within 60 minutes of each other all overlap whichever one wins the race.
     // The overlapping ones go first so they take pool connections in the same round as the first exact starts:
     // only the staff row lock refuses them (the unique index stops exact starts alone).
-    const offsets = [15, 30, 45, 60, -45, -30, ...Array.from({ length: 20 }, () => 0)];
+    const offsets = [15, 30, -15, -30, ...Array.from({ length: 20 }, () => 0)];
     const results = await Promise.allSettled(offsets.map(attempt));
     const booked = results.filter((result) => result.status === "fulfilled");
     const refused = results.filter(
